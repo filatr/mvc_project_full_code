@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# Заборона доступу до прихованих файлів
+RewriteRule (^|/)\. - [F]
+
+# sitemap.xml → sitemap.php
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+# Якщо файл або папка існує — не чіпаємо
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Все інше — в index.php
+RewriteRule ^ index.php [L]

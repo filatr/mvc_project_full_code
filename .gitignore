@@ -1,0 +1,18 @@
+# Залежності
+/vendor/
+/node_modules/
+
+# Конфігурації
+.env
+
+# IDE та редактори
+/.idea
+/.vscode
+
+# Логи та кеш
+*.log
+/cache/
+
+# Системні файли
+.DS_Store
+Thumbs.db
