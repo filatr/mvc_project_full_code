@@ -1,7 +1,4 @@
 <?php
-/**
- * models/Post.php
- */
 
 require_once ROOT . '/core/Model.php';
 
@@ -9,11 +6,8 @@ class Post extends Model
 {
     /**
      * Отримати останні пости
-     *
-     * @param int $limit
-     * @return array
      */
-    public function getLatestPublished(int $limit = 5): array
+    public function getLatest(int $limit = 5): array
     {
         $sql = "
             SELECT *
@@ -26,16 +20,13 @@ class Post extends Model
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll();
     }
 
     /**
      * Отримати пост по ID
-     *
-     * @param int $id
-     * @return array|null
      */
-    public function getById(int $id): ?array
+    public function getById(int $id): array|false
     {
         $sql = "
             SELECT *
@@ -48,8 +39,54 @@ class Post extends Model
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
 
-        $post = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch();
+    }
 
-        return $post ?: null;
+    /**
+     * Створити новий пост
+     */
+    public function create(string $title, string $content): bool
+    {
+        $sql = "
+            INSERT INTO posts (title, content, created_at)
+            VALUES (:title, :content, NOW())
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':title'   => $title,
+            ':content' => $content,
+        ]);
+    }
+
+    /**
+     * Оновити пост
+     */
+    public function update(int $id, string $title, string $content): bool
+    {
+        $sql = "
+            UPDATE posts
+            SET title = :title,
+                content = :content
+            WHERE id = :id
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':id'      => $id,
+            ':title'   => $title,
+            ':content' => $content,
+        ]);
+    }
+
+    /**
+     * Видалити пост
+     */
+    public function delete(int $id): bool
+    {
+        $sql = "DELETE FROM posts WHERE id = :id";
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':id' => $id]);
     }
 }

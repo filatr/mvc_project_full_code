@@ -1,32 +1,45 @@
 <?php
-/**
- * core/Model.php
- *
- * Базовий клас для всіх моделей.
- * Забезпечує доступ до PDO через Database (Singleton).
- */
 
-// Підключаємо клас Database
-require_once ROOT . '/core/Database.php';
-
-abstract class Model
+class Database
 {
-    /**
-     * @var PDO
-     * PDO-зʼєднання з базою даних
-     */
-    protected $db;
+    private static ?Database $instance = null;
+    private PDO $pdo;
 
     /**
-     * Конструктор моделі
-     *
-     * Отримує PDO-зʼєднання через Database::getInstance()
+     * Приватний конструктор — тільки через getInstance()
      */
-    public function __construct()
+    private function __construct()
     {
-        // ❗ ВАЖЛИВО:
-        // НЕ new Database()
-        // А ТІЛЬКИ через Singleton
-        $this->db = Database::getInstance();
+        $dbConfig = require ROOT . '/config/db.php';
+
+        $this->pdo = new PDO(
+            $dbConfig['dsn'],
+            $dbConfig['user'],
+            $dbConfig['password'],
+            [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+            ]
+        );
+    }
+
+    /**
+     * Singleton
+     */
+    public static function getInstance(): Database
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Повертає PDO
+     */
+    public function getConnection(): PDO
+    {
+        return $this->pdo;
     }
 }

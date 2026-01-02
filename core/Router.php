@@ -1,74 +1,104 @@
 <?php
-
 /**
- * Router — маршрутизація URL → Controller → Action
+ * core/Router.php
+ * Відповідає за маршрутизацію URL → Controller → Action
  */
 
 class Router
 {
     /**
-     * Основний метод запуску роутера
+     * Controller за замовчуванням
      */
-    public function run()
+    protected string $defaultController = 'HomeController';
+
+    /**
+     * Метод за замовчуванням
+     */
+    protected string $defaultAction = 'index';
+
+    /**
+     * Запуск маршрутизації
+     */
+    public function dispatch(): void
     {
-        // Отримуємо URL без GET-параметрів
+        // Отримуємо URI без GET-параметрів
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+        // Прибираємо зайві слеші
         $uri = trim($uri, '/');
 
-        // Якщо головна сторінка
-        if ($uri === '') {
-            $controllerName = 'HomeController';
-            $actionName = 'actionIndex';
-        } else {
-            $parts = explode('/', $uri);
+        // Розбиваємо URI на частини
+        $segments = $uri === '' ? [] : explode('/', $uri);
 
-            // Контролер
-            $controllerName = ucfirst($parts[0]) . 'Controller';
+        // ================================
+        // Controller
+        // ================================
+        $controllerName = $this->defaultController;
 
-            // Метод (action)
-            $actionName = isset($parts[1])
-                ? 'action' . ucfirst($parts[1])
-                : 'actionIndex';
+        if (!empty($segments[0])) {
+            $controllerName = ucfirst($segments[0]) . 'Controller';
         }
 
-        $controllerFile = __DIR__ . '/../controllers/' . $controllerName . '.php';
+        $controllerFile = ROOT . '/controllers/' . $controllerName . '.php';
 
-        // Перевірка існування файлу контролера
         if (!file_exists($controllerFile)) {
-            $this->error404("Контролер $controllerName не знайдено");
+            $this->show404();
             return;
         }
 
         require_once $controllerFile;
 
-        // Перевірка класу
         if (!class_exists($controllerName)) {
-            $this->error404("Клас $controllerName не існує");
+            $this->show404();
             return;
         }
 
         $controller = new $controllerName();
 
-        // Перевірка методу
-        if (!method_exists($controller, $actionName)) {
-            $this->error404("Метод $actionName не існує");
+        // ================================
+        // Action (метод)
+        // ================================
+        $action = $this->defaultAction;
+
+        if (!empty($segments[1])) {
+            $action = $segments[1];
+        }
+
+        if (!method_exists($controller, $action)) {
+            $this->show404();
             return;
         }
 
-        // Виклик action
-        $controller->$actionName();
+        // ================================
+        // Параметри
+        // ================================
+        $params = array_slice($segments, 2);
+
+        // ================================
+        // Виклик контролера
+        // ================================
+        call_user_func_array([$controller, $action], $params);
     }
 
     /**
-     * Вивід 404
+     * 404 сторінка
      */
-    private function error404($message = '')
+    protected function show404(): void
     {
         http_response_code(404);
-        echo "<h1>404 Not Found</h1>";
-        if ($message) {
-            echo "<p>$message</p>";
+
+        $errorControllerFile = ROOT . '/controllers/ErrorController.php';
+
+        if (file_exists($errorControllerFile)) {
+            require_once $errorControllerFile;
+
+            if (class_exists('ErrorController')) {
+                $controller = new ErrorController();
+                $controller->notFound();
+                return;
+            }
         }
-        exit;
+
+        echo '<h1>404 — Сторінку не знайдено</h1>';
     }
 }

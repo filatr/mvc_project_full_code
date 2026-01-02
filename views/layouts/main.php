@@ -1,10 +1,10 @@
 <?php
 /**
- * -------------------------------------------------------
+ * views/layouts/main.php
  * Основний layout сайту
- * -------------------------------------------------------
- * Тут формується HTML-обгортка сторінки
- * View підключається всередині <main>
+ *
+ * Змінна $content містить HTML конкретного шаблону
+ * (наприклад: views/home/index.php)
  */
 ?>
 <!DOCTYPE html>
@@ -12,59 +12,44 @@
 <head>
     <meta charset="UTF-8">
 
-    <!-- SEO: заголовок сторінки -->
-    <title>
-        <?= isset($title)
-            ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8')
-            : 'Мій інформаційний сайт'
-        ?>
-    </title>
-
-    <!-- SEO: description -->
-    <meta name="description"
-          content="<?= isset($metaDescription)
-              ? htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8')
-              : 'Інформаційний сайт'
-          ?>">
-
+    <!-- Базовий meta viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Стилі -->
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <!-- Базовий title (пізніше зробимо динамічним) -->
+    <title>Мій сайт</title>
+
+    <!-- Тут пізніше можна підключити CSS теми -->
+    <!-- <link rel="stylesheet" href="/assets/css/style.css"> -->
 </head>
 <body>
 
 <header>
+    <h1>Мій сайт</h1>
     <nav>
         <a href="/">Головна</a>
-
-        <?php if (Auth::check()): ?>
-            <a href="/logout">Вийти</a>
-
-            <?php if (Auth::isAdmin()): ?>
-                <a href="/admin">Адмінка</a>
-            <?php endif; ?>
-
-        <?php else: ?>
-            <a href="/login">Вхід</a>
-        <?php endif; ?>
+        <a href="/login">Вхід</a>
+        <a href="/admin">Адмінка</a>
     </nav>
+    <hr>
 </header>
 
 <main>
     <?php
     /**
-     * ---------------------------------------------------
-     * Тут підключається конкретний View
-     * ---------------------------------------------------
+     * Вивід контенту конкретної сторінки
+     * Контент формується у View через буферизацію
      */
-    require $viewFile;
+    echo $content;
     ?>
 </main>
 
 <footer>
-    <p>&copy; <?= date('Y') ?> Мій сайт</p>
+    <hr>
+    <small>&copy; <?= date('Y') ?> Мій сайт</small>
 </footer>
+
+<!-- Тут пізніше можна підключати JS -->
+<!-- <script src="/assets/js/app.js"></script> -->
 
 </body>
 </html>

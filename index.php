@@ -1,124 +1,50 @@
 <?php
 /**
  * index.php
- *
- * Front Controller (MVC)
- * Єдина точка входу для всіх HTTP-запитів
+ * Єдина точка входу в додаток (Front Controller)
  */
 
-/**
- * =========================
- * 1. НАЛАШТУВАННЯ СЕРЕДОВИЩА
- * =========================
- */
-
-// === ВКЛЮЧАЄМО ПОМИЛКИ (тимчасово) ===
+// ================================
+// 1. Увімкнення виводу помилок (тільки для розробки)
+// ================================
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// === КОРІНЬ ПРОЄКТУ ===
-// __DIR__ = абсолютний шлях до папки, де лежить index.php
+// ================================
+// 2. Константи шляхів
+// ================================
+
+// Абсолютний шлях до кореня проєкту
 define('ROOT', __DIR__);
 
-// Запуск сесії
-session_start();
+// Шлях до папки з кодом
+define('APP_PATH', ROOT);
 
-// Захист від session fixation
-session_regenerate_id(true);
+// ================================
+// 3. Підключення базових файлів ядра
+// ================================
 
-/**
- * =========================
- * 2. CSRF TOKEN
- * =========================
- */
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
+require_once ROOT . '/core/Database.php';
+require_once ROOT . '/core/Model.php';
+require_once ROOT . '/core/View.php';
+require_once ROOT . '/core/Controller.php';
+require_once ROOT . '/core/Router.php';
+require_once ROOT . '/core/Auth.php';
 
-/**
- * =========================
- * 3. ПІДКЛЮЧЕННЯ ЯДРА MVC
- * =========================
- */
-require_once __DIR__ . '/core/Database.php';
-require_once __DIR__ . '/core/Controller.php';
-require_once __DIR__ . '/core/View.php';
-require_once __DIR__ . '/core/Auth.php';
+// ================================
+// 4. Запуск роутера
+// ================================
 
-/**
- * =========================
- * 4. SITEMAP (ОКРЕМИЙ ВИПАДОК)
- * =========================
- */
-$route = $_GET['route'] ?? '';
-
-if ($route === 'sitemap.xml') {
-    require_once __DIR__ . '/controllers/SitemapController.php';
-    (new SitemapController())->index();
-    exit;
-}
-
-/**
- * =========================
- * 5. РОУТИНГ
- * =========================
- */
-
-// Якщо route не передано — головна сторінка
-if ($route === '') {
-    require_once __DIR__ . '/controllers/HomeController.php';
-    (new HomeController())->index();
-    exit;
-}
-
-// Розбиваємо маршрут
-$parts = explode('/', trim($route, '/'));
-$controllerName = ucfirst($parts[0]) . 'Controller';
-$method = $parts[1] ?? 'index';
-$param = $parts[2] ?? null;
-
-$controllerFile = __DIR__ . '/controllers/' . $controllerName . '.php';
-
-/**
- * =========================
- * 6. ПЕРЕВІРКА КОНТРОЛЕРА
- * =========================
- */
-if (!file_exists($controllerFile)) {
-    http_response_code(404);
-    echo '404 - Controller not found';
-    exit;
-}
-
-require_once $controllerFile;
-
-if (!class_exists($controllerName)) {
+try {
+    $router = new Router();
+    $router->dispatch();
+} catch (Throwable $e) {
+    // ================================
+    // 5. Глобальна обробка помилок
+    // ================================
     http_response_code(500);
-    echo 'Controller class not found';
-    exit;
-}
 
-$controller = new $controllerName();
-
-/**
- * =========================
- * 7. ПЕРЕВІРКА МЕТОДУ
- * =========================
- */
-if (!method_exists($controller, $method)) {
-    http_response_code(404);
-    echo '404 - Method not found';
-    exit;
-}
-
-/**
- * =========================
- * 8. ВИКЛИК КОНТРОЛЕРА
- * =========================
- */
-if ($param !== null) {
-    $controller->$method($param);
-} else {
-    $controller->$method();
+    echo '<h1>500 — Внутрішня помилка сервера</h1>';
+    echo '<pre>' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</pre>';
 }
