@@ -1,47 +1,19 @@
 <?php
 /**
- * HomeController
- *
- * Контролер головної сторінки сайту.
- * Відповідає ТІЛЬКИ за публічну частину (не адмінку).
+ * controllers/HomeController.php
  */
 
-require_once __DIR__ . '/../core/Controller.php';
-require_once __DIR__ . '/../models/Post.php';
+require_once ROOT . '/core/Controller.php';
+require_once ROOT . '/models/Post.php';
 
 class HomeController extends Controller
 {
-    /**
-     * Головна сторінка
-     * URL: /
-     */
-    public function index()
+    public function index(): void
     {
         $postModel = new Post();
+        $posts = $postModel->getLatestPublished(5);
 
-        // Отримуємо опубліковані записи
-        $posts = $postModel->getLatestPublished();
-
-        /**
-         * SEO / META
-         * WordPress-подібна логіка
-         */
-        $this->view->set('meta_title', 'Головна сторінка');
-        $this->view->set(
-            'meta_description',
-            'Останні публікації та матеріали сайту'
-        );
-        $this->view->set('canonical', '/');
-
-        /**
-         * Передаємо дані у View
-         */
         $this->view->set('posts', $posts);
-
-        /**
-         * Рендер шаблону
-         * views/home/index.php
-         */
         $this->view->render('home/index');
     }
 }

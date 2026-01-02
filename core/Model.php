@@ -1,17 +1,32 @@
 <?php
+/**
+ * core/Model.php
+ *
+ * Базовий клас для всіх моделей.
+ * Забезпечує доступ до PDO через Database (Singleton).
+ */
 
-require_once __DIR__ . '/Database.php';
+// Підключаємо клас Database
+require_once ROOT . '/core/Database.php';
 
 abstract class Model
 {
     /**
      * @var PDO
+     * PDO-зʼєднання з базою даних
      */
-    protected PDO $db;
+    protected $db;
 
+    /**
+     * Конструктор моделі
+     *
+     * Отримує PDO-зʼєднання через Database::getInstance()
+     */
     public function __construct()
     {
-        $database = new Database();
-        $this->db = $database->getConnection();
+        // ❗ ВАЖЛИВО:
+        // НЕ new Database()
+        // А ТІЛЬКИ через Singleton
+        $this->db = Database::getInstance();
     }
 }

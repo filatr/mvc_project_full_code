@@ -12,9 +12,14 @@
  * =========================
  */
 
-// У продакшені не показуємо помилки користувачу
-ini_set('display_errors', 0);
+// === ВКЛЮЧАЄМО ПОМИЛКИ (тимчасово) ===
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+// === КОРІНЬ ПРОЄКТУ ===
+// __DIR__ = абсолютний шлях до папки, де лежить index.php
+define('ROOT', __DIR__);
 
 // Запуск сесії
 session_start();

@@ -1,38 +1,45 @@
+<?php
+/**
+ * views/home/index.php
+ * Головна сторінка сайту
+ */
+
+/** @var array $posts */
+?>
+
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Головна</title>
-    <style>
-        body {
-            font-family: Arial;
-            padding: 40px;
-        }
-        a {
-            display: inline-block;
-            margin-right: 10px;
-        }
-    </style>
+    <title>Головна сторінка</title>
 </head>
 <body>
 
 <h1>Головна сторінка</h1>
 
-<p>Ласкаво просимо на сайт.</p>
-
-<?php if (!empty($_SESSION['user'])): ?>
-
-    <p>
-        Ви увійшли як:
-        <b><?= htmlspecialchars($_SESSION['user']['login'], ENT_QUOTES, 'UTF-8') ?></b>
-    </p>
-
-    <a href="/admin">Адмінка</a>
-    <a href="/logout">Вийти</a>
-
+<?php if (empty($posts)): ?>
+    <p>Поки що немає жодного запису.</p>
 <?php else: ?>
 
-    <a href="/login">Увійти</a>
+    <?php foreach ($posts as $post): ?>
+        <article>
+            <h2>
+                <?= htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') ?>
+            </h2>
+
+            <p>
+                <?= nl2br(htmlspecialchars($post['content'], ENT_QUOTES, 'UTF-8')) ?>
+            </p>
+
+            <?php if (!empty($post['created_at'])): ?>
+                <small>
+                    Дата: <?= htmlspecialchars($post['created_at'], ENT_QUOTES, 'UTF-8') ?>
+                </small>
+            <?php endif; ?>
+
+            <hr>
+        </article>
+    <?php endforeach; ?>
 
 <?php endif; ?>
 
