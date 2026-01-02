@@ -1,44 +1,74 @@
 <?php
+
 /**
- * Примітивний Router
- * Приймає path з GET та викликає відповідний контролер
+ * Router — маршрутизація URL → Controller → Action
  */
 
 class Router
 {
-    public function dispatch(): void
+    /**
+     * Основний метод запуску роутера
+     */
+    public function run()
     {
-        $path = $_GET['path'] ?? 'post/index';
-        $parts = explode('/', trim($path, '/'));
+        // Отримуємо URL без GET-параметрів
+        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $uri = trim($uri, '/');
 
-        // Контролер + метод + параметр
-        $controllerName = ucfirst($parts[0]) . 'Controller';
-        $action = $parts[1] ?? 'index';
-        $param = $parts[2] ?? null;
+        // Якщо головна сторінка
+        if ($uri === '') {
+            $controllerName = 'HomeController';
+            $actionName = 'actionIndex';
+        } else {
+            $parts = explode('/', $uri);
 
-        // Автопідключення контролера
-        $controllerFile = ROOT_PATH . '/controllers/' . $controllerName . '.php';
-        if (!file_exists($controllerFile)) {
-            http_response_code(404);
-            echo "Контролер не знайдено: $controllerName";
-            exit;
+            // Контролер
+            $controllerName = ucfirst($parts[0]) . 'Controller';
+
+            // Метод (action)
+            $actionName = isset($parts[1])
+                ? 'action' . ucfirst($parts[1])
+                : 'actionIndex';
         }
+
+        $controllerFile = __DIR__ . '/../controllers/' . $controllerName . '.php';
+
+        // Перевірка існування файлу контролера
+        if (!file_exists($controllerFile)) {
+            $this->error404("Контролер $controllerName не знайдено");
+            return;
+        }
+
         require_once $controllerFile;
 
+        // Перевірка класу
         if (!class_exists($controllerName)) {
-            http_response_code(500);
-            echo "Клас контролера не знайдено: $controllerName";
-            exit;
+            $this->error404("Клас $controllerName не існує");
+            return;
         }
 
         $controller = new $controllerName();
 
-        if (!method_exists($controller, $action)) {
-            http_response_code(404);
-            echo "Метод не знайдено: $action";
-            exit;
+        // Перевірка методу
+        if (!method_exists($controller, $actionName)) {
+            $this->error404("Метод $actionName не існує");
+            return;
         }
 
-        $controller->$action($param);
+        // Виклик action
+        $controller->$actionName();
+    }
+
+    /**
+     * Вивід 404
+     */
+    private function error404($message = '')
+    {
+        http_response_code(404);
+        echo "<h1>404 Not Found</h1>";
+        if ($message) {
+            echo "<p>$message</p>";
+        }
+        exit;
     }
 }

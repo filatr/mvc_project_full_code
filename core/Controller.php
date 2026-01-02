@@ -1,18 +1,30 @@
 <?php
-class Controller {
+/**
+ * -------------------------------------------------------
+ * Controller — базовий клас контролерів
+ * -------------------------------------------------------
+ */
 
-    protected array $meta = [
-        'title' => 'Інформаційний сайт',
-        'description' => 'Інформаційний сайт'
-    ];
+class Controller
+{
+    /**
+     * Рендер view-файлу
+     *
+     * @param string $view   шлях до view (без .php)
+     * @param array  $data   дані для передачі у view
+     */
+    protected function view(string $view, array $data = []): void
+    {
+        // Робимо ключі масиву змінними
+        extract($data, EXTR_SKIP);
 
-    protected function setMeta(array $meta): void {
-        $this->meta = array_merge($this->meta, $meta);
-    }
+        // Повний шлях до view-файлу
+        $viewFile = ROOT . '/views/' . $view . '.php';
 
-    protected function view(string $file, array $data = []) {
-        extract($data);
-        $meta = $this->meta;
-        require __DIR__.'/../views/layout.php';
+        if (!file_exists($viewFile)) {
+            die('View не знайдено: ' . htmlspecialchars($viewFile));
+        }
+
+        require $viewFile;
     }
 }

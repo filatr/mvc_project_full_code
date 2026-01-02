@@ -1,14 +1,10 @@
+# Увімкнення rewrite
 RewriteEngine On
 
-# Заборона доступу до прихованих файлів
-RewriteRule (^|/)\. - [F]
+# Якщо файл або директорія існують — не чіпаємо
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
-# sitemap.xml → sitemap.php
-RewriteRule ^sitemap\.xml$ sitemap.php [L]
-
-# Якщо файл або папка існує — не чіпаємо
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-
-# Все інше — в index.php
+# Всі інші запити відправляємо в index.php
 RewriteRule ^ index.php [L]

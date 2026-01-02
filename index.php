@@ -1,52 +1,119 @@
 <?php
-require_once __DIR__.'/config.php';
-require_once __DIR__.'/core/Database.php';
-require_once __DIR__.'/core/Model.php';
-require_once __DIR__.'/core/Controller.php';
-require_once __DIR__.'/core/Csrf.php';
-require_once __DIR__.'/core/Auth.php';
-require_once __DIR__.'/core/Security.php';
-Security::headers();
+/**
+ * index.php
+ *
+ * Front Controller (MVC)
+ * Єдина точка входу для всіх HTTP-запитів
+ */
 
+/**
+ * =========================
+ * 1. НАЛАШТУВАННЯ СЕРЕДОВИЩА
+ * =========================
+ */
 
-$uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-$parts = explode('/', $uri);
+// У продакшені не показуємо помилки користувачу
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 
-/* Головна */
-if ($uri === '') {
-    require_once __DIR__.'/controllers/PostController.php';
-    (new PostController())->actionIndex();
+// Запуск сесії
+session_start();
+
+// Захист від session fixation
+session_regenerate_id(true);
+
+/**
+ * =========================
+ * 2. CSRF TOKEN
+ * =========================
+ */
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+/**
+ * =========================
+ * 3. ПІДКЛЮЧЕННЯ ЯДРА MVC
+ * =========================
+ */
+require_once __DIR__ . '/core/Database.php';
+require_once __DIR__ . '/core/Controller.php';
+require_once __DIR__ . '/core/View.php';
+require_once __DIR__ . '/core/Auth.php';
+
+/**
+ * =========================
+ * 4. SITEMAP (ОКРЕМИЙ ВИПАДОК)
+ * =========================
+ */
+$route = $_GET['route'] ?? '';
+
+if ($route === 'sitemap.xml') {
+    require_once __DIR__ . '/controllers/SitemapController.php';
+    (new SitemapController())->index();
     exit;
 }
 
-/* Адмінка */
-if ($parts[0] === 'admin') {
-    require_once __DIR__.'/controllers/admin/PostController.php';
-    $controller = new PostController();
-    $action = $parts[1] ?? 'index';
+/**
+ * =========================
+ * 5. РОУТИНГ
+ * =========================
+ */
 
-    match ($action) {
-        'create' => $controller->create(),
-        'edit'   => $controller->edit(),
-        'delete' => $controller->delete(),
-        default  => $controller->actionIndex(),
-    };
+// Якщо route не передано — головна сторінка
+if ($route === '') {
+    require_once __DIR__ . '/controllers/HomeController.php';
+    (new HomeController())->index();
     exit;
 }
 
-/* Розділ */
-if ($parts[0] === 'section' && !empty($parts[1])) {
-    require_once __DIR__.'/controllers/SectionController.php';
-    (new SectionController())->view($parts[1]);
+// Розбиваємо маршрут
+$parts = explode('/', trim($route, '/'));
+$controllerName = ucfirst($parts[0]) . 'Controller';
+$method = $parts[1] ?? 'index';
+$param = $parts[2] ?? null;
+
+$controllerFile = __DIR__ . '/controllers/' . $controllerName . '.php';
+
+/**
+ * =========================
+ * 6. ПЕРЕВІРКА КОНТРОЛЕРА
+ * =========================
+ */
+if (!file_exists($controllerFile)) {
+    http_response_code(404);
+    echo '404 - Controller not found';
     exit;
 }
 
-/* Запис */
-if ($parts[0] === 'post' && !empty($parts[1])) {
-    require_once __DIR__.'/controllers/PostController.php';
-    (new PostController())->viewBySlug($parts[1]);
+require_once $controllerFile;
+
+if (!class_exists($controllerName)) {
+    http_response_code(500);
+    echo 'Controller class not found';
     exit;
 }
 
-http_response_code(404);
-echo '404';
+$controller = new $controllerName();
+
+/**
+ * =========================
+ * 7. ПЕРЕВІРКА МЕТОДУ
+ * =========================
+ */
+if (!method_exists($controller, $method)) {
+    http_response_code(404);
+    echo '404 - Method not found';
+    exit;
+}
+
+/**
+ * =========================
+ * 8. ВИКЛИК КОНТРОЛЕРА
+ * =========================
+ */
+if ($param !== null) {
+    $controller->$method($param);
+} else {
+    $controller->$method();
+}

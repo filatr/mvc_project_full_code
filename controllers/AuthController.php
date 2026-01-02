@@ -1,66 +1,87 @@
 <?php
+
 /**
- * Контролер авторизації користувачів
+ * AuthController
+ *
+ * Відповідає за:
+ * - показ форми логіну
+ * - обробку логіну
+ * - вихід із системи
  */
 
-class AuthController extends Controller
+require_once __DIR__ . '/../core/Auth.php';
+require_once __DIR__ . '/../core/Csrf.php';
+require_once __DIR__ . '/../models/User.php';
+
+class AuthController
 {
     /**
-     * Форма входу
+     * Показ форми логіну
+     * URL: GET /login
      */
-    public function login()
+    public function loginForm()
     {
-        // Якщо вже залогінений — одразу в адмінку
-        if (Auth::check()) {
+        // Якщо користувач вже авторизований — не пускаємо на login
+        if (Auth::check(false)) {
             header('Location: /admin');
             exit;
         }
 
-        $error = null;
-
-        // Обробка форми
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-            // CSRF перевірка
-            if (!Csrf::check($_POST['csrf'] ?? '')) {
-                $error = 'Невірний CSRF-токен';
-            } else {
-
-                $username = trim($_POST['username'] ?? '');
-                $password = $_POST['password'] ?? '';
-
-                $user = User::findByUsername($username);
-
-                if (!$user || !password_verify($password, $user['password_hash'])) {
-                    $error = 'Невірний логін або пароль';
-                } else {
-
-                    // Успішний вхід
-                    $_SESSION['user'] = [
-                        'id' => $user['id'],
-                        'username' => $user['username'],
-                        'role' => $user['role']
-                    ];
-
-                    header('Location: /admin');
-                    exit;
-                }
-            }
-        }
-
-        $this->view->render('auth/login', [
-            'error' => $error,
-            'csrf'  => Csrf::token()
-        ]);
+        require __DIR__ . '/../views/auth/login.php';
     }
 
     /**
-     * Вихід
+     * Обробка логіну
+     * URL: POST /login
+     */
+    public function login()
+    {
+        // Перевірка CSRF
+        if (!Csrf::check($_POST['csrf_token'] ?? '')) {
+            die('CSRF-помилка');
+        }
+
+        $username = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if ($username === '' || $password === '') {
+            die('Заповніть усі поля');
+        }
+
+        // Отримуємо користувача з БД
+        $user = User::findByUsername($username);
+
+        if (!$user) {
+            die('Користувача не знайдено');
+        }
+
+        // Перевірка пароля
+        if (!password_verify($password, $user['password_hash'])) {
+            die('Невірний пароль');
+        }
+
+        // Якщо користувач заблокований
+        if ($user['is_blocked']) {
+            die('Обліковий запис заблоковано');
+        }
+
+        // Авторизація
+        Auth::login($user);
+
+        // Успішний вхід → в адмінку
+        header('Location: /admin');
+        exit;
+    }
+
+    /**
+     * Вихід із системи
+     * URL: GET /logout
      */
     public function logout()
     {
-        session_destroy();
-        header('Location: /');
+        Auth::logout();
+
+        header('Location: /login');
         exit;
     }
 }

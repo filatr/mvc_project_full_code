@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Забороняємо адмінку
+Disallow: /admin
+Disallow: /login
+
+# Sitemap
+Sitemap: https://your-domain.com/sitemap.xml

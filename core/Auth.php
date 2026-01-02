@@ -1,12 +1,14 @@
 <?php
 /**
- * Клас авторизації та контролю доступу
+ * -------------------------------------------------------
+ * Auth — клас авторизації та контролю доступу
+ * -------------------------------------------------------
  */
 
 class Auth
 {
     /**
-     * Перевіряє, чи користувач увійшов у систему
+     * Перевіряє, чи користувач залогінений
      */
     public static function check(): bool
     {
@@ -14,7 +16,7 @@ class Auth
     }
 
     /**
-     * Повертає поточного користувача
+     * Повертає дані поточного користувача
      */
     public static function user(): ?array
     {
@@ -22,7 +24,9 @@ class Auth
     }
 
     /**
-     * Перевіряє роль користувача
+     * Перевірка ролі користувача
+     *
+     * @param string $role
      */
     public static function hasRole(string $role): bool
     {
@@ -34,24 +38,53 @@ class Auth
     }
 
     /**
-     * Перевірка доступу до адмінки
-     * Якщо немає доступу — 403
+     * Вимагає авторизацію
+     * Якщо не залогінений — редірект на /login
      */
-    public static function requireAdmin(): void
+    public static function requireLogin(): void
     {
-        if (!self::check() || !in_array($_SESSION['user']['role'], ['admin', 'editor'])) {
-            http_response_code(403);
-            echo 'Доступ заборонено';
+        if (!self::check()) {
+            header('Location: /login');
             exit;
         }
     }
 
     /**
-     * Логаут
+     * Вимагає роль адміністратора
+     */
+    public static function requireAdmin(): void
+    {
+        self::requireLogin();
+
+        if ($_SESSION['user']['role'] !== 'admin') {
+            http_response_code(403);
+            echo '<h1>403 Доступ заборонено</h1>';
+            exit;
+        }
+    }
+
+    /**
+     * Авторизація користувача
+     *
+     * @param array $user
+     */
+    public static function login(array $user): void
+    {
+        $_SESSION['user'] = [
+            'id'       => $user['id'],
+            'username' => $user['username'],
+            'role'     => $user['role'],
+        ];
+    }
+
+    /**
+     * Вихід користувача
      */
     public static function logout(): void
     {
+        unset($_SESSION['user']);
         session_destroy();
+
         header('Location: /login');
         exit;
     }

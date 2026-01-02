@@ -1,62 +1,193 @@
 <?php
-/**
- * Адмін-контролер для керування записами
- */
 
-require_once __DIR__.'/../core/Auth.php';
-require_once __DIR__.'/../core/Slug.php';
-require_once __DIR__.'/../models/Post.php';
+require_once __DIR__ . '/../core/Controller.php';
+require_once __DIR__ . '/../core/Auth.php';
+require_once __DIR__ . '/../models/Post.php';
 
-class PostController extends Controller {
-
+class PostController extends Controller
+{
     /**
-     * Список записів
+     * =========================
+     * Список постів
+     * =========================
      */
-    public function actionIndex() {
-        Auth::requireAdmin();
+    public function index()
+    {
+        $postModel = new Post();
+        $posts = $postModel->getAll();
 
-        $posts = Post::all();
-
-        ob_start();
-        require __DIR__.'/../views/admin/posts/index.php';
-        $content = ob_get_clean();
-
-        require __DIR__.'/../views/layout.php';
+        $this->view('post/index', [
+            'posts' => $posts
+        ]);
     }
 
     /**
-     * Створення нового запису
+     * =========================
+     * Перегляд одного поста
+     * =========================
      */
-    public function create() {
-        Auth::requireAdmin();
+    public function show($id)
+    {
+        $id = (int)$id;
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-            // 1️⃣ Отримуємо дані з форми
-            $title   = trim($_POST['title'] ?? '');
-            $content = trim($_POST['content'] ?? '');
-
-            // 2️⃣ Генеруємо SEO-friendly slug ЗАГОЛОВКА
-            // Саме ОТУТ, саме перед збереженням у БД
-            $slug = Slug::make($title);
-
-            // 3️⃣ Зберігаємо запис
-            Post::create([
-                'title'   => $title,
-                'slug'    => $slug,
-                'content' => $content
-            ]);
-
-            // 4️⃣ Переходимо назад у список
-            header('Location: /admin');
+        if ($id <= 0) {
+            http_response_code(404);
+            echo 'Post not found';
             exit;
         }
 
-        // Якщо GET — показуємо форму
-        ob_start();
-        require __DIR__.'/../views/admin/posts/form.php';
-        $content = ob_get_clean();
+        $postModel = new Post();
+        $post = $postModel->getById($id);
 
-        require __DIR__.'/../views/layout.php';
+        if (!$post) {
+            http_response_code(404);
+            echo 'Post not found';
+            exit;
+        }
+
+        $this->view('post/show', [
+            'post' => $post
+        ]);
+    }
+
+    /**
+     * =========================
+     * Форма створення
+     * =========================
+     */
+    public function create()
+    {
+        Auth::check();
+
+        $this->view('post/create');
+    }
+
+    /**
+     * =========================
+     * Збереження поста
+     * =========================
+     */
+    public function store()
+    {
+        Auth::check();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
+
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            http_response_code(403);
+            exit('Invalid CSRF token');
+        }
+
+        $title = trim($_POST['title'] ?? '');
+        $content = trim($_POST['content'] ?? '');
+
+        if ($title === '' || $content === '') {
+            $_SESSION['error'] = 'All fields are required';
+            header('Location: /post/create');
+            exit;
+        }
+
+        $postModel = new Post();
+        $postModel->create([
+            'title'   => $title,
+            'content' => $content,
+            'user_id' => $_SESSION['user']['id']
+        ]);
+
+        header('Location: /post');
+        exit;
+    }
+
+    /**
+     * =========================
+     * Форма редагування
+     * =========================
+     */
+    public function edit($id)
+    {
+        Auth::check();
+
+        $id = (int)$id;
+        $postModel = new Post();
+        $post = $postModel->getById($id);
+
+        if (!$post) {
+            http_response_code(404);
+            exit('Post not found');
+        }
+
+        $this->view('post/edit', [
+            'post' => $post
+        ]);
+    }
+
+    /**
+     * =========================
+     * Оновлення поста
+     * =========================
+     */
+    public function update($id)
+    {
+        Auth::check();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
+
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            http_response_code(403);
+            exit('Invalid CSRF token');
+        }
+
+        $id = (int)$id;
+        $title = trim($_POST['title'] ?? '');
+        $content = trim($_POST['content'] ?? '');
+
+        if ($title === '' || $content === '') {
+            $_SESSION['error'] = 'All fields are required';
+            header("Location: /post/edit/$id");
+            exit;
+        }
+
+        $postModel = new Post();
+        $postModel->update($id, [
+            'title'   => $title,
+            'content' => $content
+        ]);
+
+        header("Location: /post/show/$id");
+        exit;
+    }
+
+    /**
+     * =========================
+     * Видалення поста
+     * =========================
+     */
+    public function delete($id)
+    {
+        Auth::check();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
+
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            http_response_code(403);
+            exit('Invalid CSRF token');
+        }
+
+        $id = (int)$id;
+
+        $postModel = new Post();
+        $postModel->delete($id);
+
+        header('Location: /post');
+        exit;
     }
 }
