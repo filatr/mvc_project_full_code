@@ -1,6 +1,13 @@
 <?php
-// Активний шаблон сайту
-define('ACTIVE_THEME', 'default');
 
-// Базовий шлях до шаблонів
-define('THEME_PATH', ROOT . '/themes/' . ACTIVE_THEME);
+return [
+    'db' => [
+        'host' => 'localhost',
+        'name' => 'pdv',
+        'user' => 'root',
+        'password' => '',
+        'charset' => 'utf8mb4'
+    ],
+
+    'theme' => 'default'
+];

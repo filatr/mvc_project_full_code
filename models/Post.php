@@ -1,22 +1,19 @@
 <?php
 
-require_once ROOT . '/core/Model.php';
-
 class Post extends Model
 {
     /**
-     * Отримати останні пости
+     * Отримати список постів
      */
-    public function getLatest(int $limit = 5): array
+    public function getLatest(int $limit = 10): array
     {
-        $sql = "
-            SELECT *
+        $stmt = $this->db->prepare("
+            SELECT id, title, slug, created_at
             FROM posts
             ORDER BY created_at DESC
             LIMIT :limit
-        ";
+        ");
 
-        $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -24,69 +21,102 @@ class Post extends Model
     }
 
     /**
+     * Отримати пост по slug
+     */
+    public function getBySlug(string $slug): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT *
+            FROM posts
+            WHERE slug = :slug
+            LIMIT 1
+        ");
+
+        $stmt->execute([':slug' => $slug]);
+        $post = $stmt->fetch();
+
+        return $post ?: null;
+    }
+
+    /**
      * Отримати пост по ID
      */
-    public function getById(int $id): array|false
+    public function getById(int $id): ?array
     {
-        $sql = "
+        $stmt = $this->db->prepare("
             SELECT *
             FROM posts
             WHERE id = :id
             LIMIT 1
-        ";
+        ");
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetch();
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch() ?: null;
     }
 
     /**
-     * Створити новий пост
+     * Створення поста
      */
-    public function create(string $title, string $content): bool
+    public function create(string $title, string $content): void
     {
-        $sql = "
-            INSERT INTO posts (title, content, created_at)
-            VALUES (:title, :content, NOW())
-        ";
+        $slug = $this->generateSlug($title);
 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':title'   => $title,
-            ':content' => $content,
+        $stmt = $this->db->prepare("
+            INSERT INTO posts (title, slug, content, created_at)
+            VALUES (:title, :slug, :content, NOW())
+        ");
+
+        $stmt->execute([
+            ':title' => $title,
+            ':slug' => $slug,
+            ':content' => $content
         ]);
     }
 
     /**
-     * Оновити пост
+     * Оновлення поста
      */
-    public function update(int $id, string $title, string $content): bool
+    public function update(int $id, string $title, string $content): void
     {
-        $sql = "
+        $slug = $this->generateSlug($title);
+
+        $stmt = $this->db->prepare("
             UPDATE posts
             SET title = :title,
+                slug = :slug,
                 content = :content
             WHERE id = :id
-        ";
+        ");
 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':id'      => $id,
-            ':title'   => $title,
-            ':content' => $content,
+        $stmt->execute([
+            ':id' => $id,
+            ':title' => $title,
+            ':slug' => $slug,
+            ':content' => $content
         ]);
     }
 
     /**
-     * Видалити пост
+     * Збільшити лічильник переглядів
      */
-    public function delete(int $id): bool
+    public function incrementViews(int $id): void
     {
-        $sql = "DELETE FROM posts WHERE id = :id";
+        $this->db->prepare("
+            UPDATE posts
+            SET views = views + 1
+            WHERE id = :id
+        ")->execute([':id' => $id]);
+    }
 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':id' => $id]);
+    /**
+     * Генерація slug
+     */
+    private function generateSlug(string $text): string
+    {
+        $text = mb_strtolower($text, 'UTF-8');
+        $text = preg_replace('/[^a-zа-я0-9]+/u', '-', $text);
+        $text = trim($text, '-');
+
+        return $text ?: uniqid('post-');
     }
 }

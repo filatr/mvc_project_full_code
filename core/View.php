@@ -1,76 +1,34 @@
 <?php
-/**
- * core/View.php
- * Відповідає за відображення (View) у MVC
- */
 
 class View
 {
-    /**
-     * Дані, передані з контролера у шаблон
-     *
-     * @var array
-     */
-    protected array $data = [];
+    private string $theme;
 
-    /**
-     * Активний layout (загальний шаблон)
-     *
-     * @var string
-     */
-    protected string $layout = 'main';
-
-    /**
-     * Передати змінну у View
-     *
-     * @param string $key
-     * @param mixed  $value
-     */
-    public function set(string $key, mixed $value): void
+    public function __construct()
     {
-        $this->data[$key] = $value;
+        $config = require ROOT . '/config/config.php';
+        $this->theme = $config['theme'] ?? 'default';
     }
 
-    /**
-     * Відобразити шаблон
-     *
-     * @param string $template шлях типу home/index
-     */
-    public function render(string $template): void
+    public function render(string $view, array $data = []): void
     {
-        // Робимо змінні доступними у шаблоні
-        extract($this->data);
+        extract($data);
 
-        // Шлях до файлу шаблону
-        $templateFile = ROOT . '/views/' . $template . '.php';
+        $viewFile = ROOT . '/views/' . $view . '.php';
+        $layoutFile = ROOT . '/themes/' . $this->theme . '/layout.php';
 
-        if (!file_exists($templateFile)) {
-            throw new Exception('Шаблон не знайдено: ' . $template);
+        if (!file_exists($viewFile)) {
+            throw new Exception("View не знайдено: $viewFile");
         }
-
-        // Буферизація виводу шаблону
-        ob_start();
-        require $templateFile;
-        $content = ob_get_clean();
-
-        // Шлях до layout
-        $layoutFile = ROOT . '/views/layouts/' . $this->layout . '.php';
 
         if (!file_exists($layoutFile)) {
-            throw new Exception('Layout не знайдено: ' . $this->layout);
+            throw new Exception("Layout не знайдено: $layoutFile");
         }
 
-        // Підключаємо layout
-        require $layoutFile;
-    }
+        ob_start();
+        require $viewFile;
+        $content = ob_get_clean();
 
-    /**
-     * Змінити layout (наприклад для адмінки)
-     *
-     * @param string $layout
-     */
-    public function setLayout(string $layout): void
-    {
-        $this->layout = $layout;
+        require $layoutFile;
     }
 }
