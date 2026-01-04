@@ -1,4 +1,12 @@
-<h2>Вхід</h2>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Вхід</title>
+</head>
+<body>
+
+<h1>Вхід в адмінку</h1>
 
 <?php if (!empty($error)): ?>
     <p style="color:red;">
@@ -8,8 +16,8 @@
 
 <form method="post">
     <div>
-        <label>Логін</label><br>
-        <input type="text" name="username" required>
+        <label>Email</label><br>
+        <input type="email" name="email" required>
     </div>
 
     <div>
@@ -19,3 +27,6 @@
 
     <button type="submit">Увійти</button>
 </form>
+
+</body>
+</html>

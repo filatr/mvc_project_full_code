@@ -1,5 +1,9 @@
 <?php
+/**
+ * Адмін-контролер для керування постами
+ */
 
+require_once ROOT . '/core/Auth.php';
 require_once ROOT . '/models/Post.php';
 
 class AdminPostController
@@ -8,65 +12,37 @@ class AdminPostController
 
     public function __construct()
     {
+        // Захист адмінки
+        Auth::requireAdmin();
+
         $this->postModel = new Post();
     }
 
     /**
-     * Список постів (admin)
+     * Список постів
      */
-    public function index()
+    public function index(): void
     {
-        $posts = $this->postModel->getAll();
+        $posts = $this->postModel->getLatest(50);
 
-        require ROOT . '/views/admin/posts/index.php';
-    }
-
-    /**
-     * Створення поста
-     */
-    public function create()
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = trim($_POST['title']);
-            $content = trim($_POST['content']);
-
-            $this->postModel->create($title, $content);
-
-            header('Location: /admin/posts');
-            exit;
-        }
-
-        require ROOT . '/views/admin/posts/create.php';
+        View::render('admin/posts/index', [
+            'posts' => $posts
+        ]);
     }
 
     /**
      * Редагування поста
      */
-    public function edit($id)
+    public function edit(int $id): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = trim($_POST['title']);
-            $content = trim($_POST['content']);
-
-            $this->postModel->update($id, $title, $content);
-
-            header('Location: /admin/posts');
-            exit;
+            // тут пізніше буде update
         }
 
         $post = $this->postModel->getById($id);
 
-        require ROOT . '/views/admin/posts/edit.php';
-    }
-
-    /**
-     * Видалення поста
-     */
-    public function delete($id)
-    {
-        $this->postModel->delete($id);
-
-        header('Location: /admin/posts');
-        exit;
+        View::render('admin/posts/edit', [
+            'post' => $post
+        ]);
     }
 }

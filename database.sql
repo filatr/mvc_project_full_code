@@ -1,85 +1,55 @@
--- =========================================
--- DATABASE
--- =========================================
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
 
-CREATE DATABASE IF NOT EXISTS mvc_project
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
-
-USE mvc_project;
-
--- =========================================
--- USERS
--- =========================================
-
+-- -----------------------------------------------------
+-- Таблиця користувачів
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS users;
 CREATE TABLE users (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(191) NOT NULL UNIQUE,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    role ENUM('user', 'admin') DEFAULT 'user',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+    role ENUM('user','admin') NOT NULL DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- =========================================
--- POSTS
--- =========================================
-
+-- -----------------------------------------------------
+-- Таблиця постів
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS posts;
 CREATE TABLE posts (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
     content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL DEFAULT NULL,
+    is_published TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-    CONSTRAINT fk_posts_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- =========================================
--- SESSIONS (optional, if stored in DB)
--- =========================================
-
-CREATE TABLE sessions (
-    id VARCHAR(128) PRIMARY KEY,
-    user_id INT UNSIGNED DEFAULT NULL,
-    data BLOB NOT NULL,
-    last_activity TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_sessions_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE SET NULL
-) ENGINE=InnoDB;
-
--- =========================================
--- DEFAULT ADMIN USER
--- password: admin123
--- =========================================
-
-INSERT INTO users (email, password, name, role)
-VALUES (
-    'admin@example.com',
-    '$2y$10$7tZqgRZ0uY7F8Q8A3P1e7.7E0lGQq0n5sNnYt9Z8x8xj0g9uE8K9C',
-    'Administrator',
+-- -----------------------------------------------------
+-- Тестовий адмін
+-- пароль: admin123
+-- -----------------------------------------------------
+INSERT INTO users (email, password, role) VALUES (
+    'admin@test.com',
+    '$2y$10$wHn4j5N7w9VZz7F7R2fN0O5a9bO6Xv9tMZ9JzN9K6E8U0JH0w7EKa',
     'admin'
 );
 
--- =========================================
--- SAMPLE POSTS
--- =========================================
-
-INSERT INTO posts (user_id, title, content) VALUES
+-- -----------------------------------------------------
+-- Тестові пости
+-- -----------------------------------------------------
+INSERT INTO posts (title, slug, content, is_published) VALUES
 (
-    1,
     'Перший пост',
-    'Це перший тестовий пост у MVC-проєкті.'
+    'pershyi-post',
+    'Це тестовий пост для перевірки MVC.',
+    1
 ),
 (
-    1,
     'Другий пост',
-    'MVC працює. Авторизація, контролери та вʼюхи підключені.'
+    'druhyi-post',
+    'Ще один пост для головної сторінки.',
+    1
 );

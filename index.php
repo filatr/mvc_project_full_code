@@ -1,83 +1,61 @@
 <?php
-declare(strict_types=1);
 
-/*
-|--------------------------------------------------------------------------
-| Debug (для розробки)
-|--------------------------------------------------------------------------
-*/
-ini_set('display_errors', '1');
-error_reporting(E_ALL);
-
-/*
-|--------------------------------------------------------------------------
-| Константи
-|--------------------------------------------------------------------------
-*/
 define('ROOT', dirname(__FILE__));
-define('CORE', ROOT . '/core');
-define('CONTROLLERS', ROOT . '/controllers');
-define('MODELS', ROOT . '/models');
-define('VIEWS', ROOT . '/views');
 
-/*
-|--------------------------------------------------------------------------
-| Autoload
-|--------------------------------------------------------------------------
-*/
-spl_autoload_register(function ($class) {
+require_once ROOT . '/core/Database.php';
+require_once ROOT . '/core/Model.php';
+require_once ROOT . '/core/Auth.php';
 
-    $paths = [
-        CORE . '/' . $class . '.php',
-        CONTROLLERS . '/' . $class . '.php',
-        MODELS . '/' . $class . '.php',
-    ];
+Auth::start();
 
-    foreach ($paths as $file) {
-        if (file_exists($file)) {
-            require_once $file;
-            return;
-        }
+$url = trim($_SERVER['REQUEST_URI'], '/');
+$parts = explode('/', $url);
+
+// ======= ROUTING =======
+
+if ($url === '') {
+    require_once ROOT . '/controllers/HomeController.php';
+    (new HomeController())->index();
+    exit;
+}
+
+// ---------- AUTH ----------
+if ($url === 'login') {
+    require_once ROOT . '/controllers/AuthController.php';
+    (new AuthController())->login();
+    exit;
+}
+
+if ($url === 'logout') {
+    Auth::logout();
+    header('Location: /');
+    exit;
+}
+
+// ---------- ADMIN ----------
+if ($parts[0] === 'admin') {
+    require_once ROOT . '/controllers/AdminPostController.php';
+    $controller = new AdminPostController();
+
+    $action = $parts[2] ?? 'index';
+    $id = $parts[3] ?? null;
+
+    if (method_exists($controller, $action)) {
+        $controller->$action($id);
+    } else {
+        http_response_code(404);
+        echo 'Admin page not found';
     }
-});
-
-/*
-|--------------------------------------------------------------------------
-| Router
-|--------------------------------------------------------------------------
-*/
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$uri = trim($uri, '/');
-$segments = $uri === '' ? [] : explode('/', $uri);
-
-$controllerName = 'HomeController';
-$actionName = 'index';
-$params = [];
-
-if (!empty($segments[0])) {
-    $controllerName = ucfirst($segments[0]) . 'Controller';
-}
-if (!empty($segments[1])) {
-    $actionName = $segments[1];
-}
-if (count($segments) > 2) {
-    $params = array_slice($segments, 2);
+    exit;
 }
 
-$controllerFile = CONTROLLERS . '/' . $controllerName . '.php';
-
-if (!file_exists($controllerFile)) {
-    http_response_code(404);
-    exit('Controller not found');
+// ---------- POSTS ----------
+if ($parts[0] === 'post') {
+    require_once ROOT . '/controllers/PostController.php';
+    (new PostController())->view($parts[1] ?? null);
+    exit;
 }
 
-require_once $controllerFile;
-
-$controller = new $controllerName();
-
-if (!method_exists($controller, $actionName)) {
-    http_response_code(404);
-    exit('Action not found');
-}
-
-call_user_func_array([$controller, $actionName], $params);
+// ---------- 404 ----------
+http_response_code(404);
+echo 'Page not found';

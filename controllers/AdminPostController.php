@@ -1,77 +1,51 @@
 <?php
 
-class AdminPostController extends Controller
+require_once ROOT . '/core/Auth.php';
+require_once ROOT . '/models/Post.php';
+
+class AdminPostController
 {
-    public function index(): void
+    private Post $postModel;
+
+    public function __construct()
     {
-        Auth::requireLogin();
-
-        $postModel = new Post();
-        $posts = $postModel->getAll();
-
-        $this->view->render('admin/index', [
-            'posts' => $posts,
-            'title' => 'Адмінка — пости'
-        ]);
+        Auth::requireAdmin();
+        $this->postModel = new Post();
     }
 
-    public function create(): void
+    public function index()
     {
-        Auth::requireLogin();
+        $posts = $this->postModel->getAll();
+        require ROOT . '/views/admin/posts/index.php';
+    }
 
+    public function create()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $postModel = new Post();
-            $postModel->create([
-                'title' => trim($_POST['title']),
-                'content' => trim($_POST['content']),
-                'status' => $_POST['status']
-            ]);
-
-            header('Location: /adminpost');
+            $this->postModel->create($_POST);
+            header('Location: /admin/posts');
             exit;
         }
 
-        $this->view->render('admin/create', [
-            'title' => 'Новий пост'
-        ]);
+        require ROOT . '/views/admin/posts/create.php';
     }
 
-    public function edit(int $id): void
+    public function edit($id)
     {
-        Auth::requireLogin();
-
-        $postModel = new Post();
-        $post = $postModel->find($id);
-
-        if (!$post) {
-            die('Пост не знайдено');
-        }
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $postModel->update($id, [
-                'title' => trim($_POST['title']),
-                'content' => trim($_POST['content']),
-                'status' => $_POST['status']
-            ]);
-
-            header('Location: /adminpost');
+            $this->postModel->update($id, $_POST);
+            header('Location: /admin/posts');
             exit;
         }
 
-        $this->view->render('admin/edit', [
-            'post' => $post,
-            'title' => 'Редагування поста'
-        ]);
+        $post = $this->postModel->find($id);
+        require ROOT . '/views/admin/posts/edit.php';
     }
 
-    public function delete(int $id): void
+    public function delete($id)
     {
-        Auth::requireLogin();
-
-        $postModel = new Post();
-        $postModel->delete($id);
-
-        header('Location: /adminpost');
+        $this->postModel->delete($id);
+        header('Location: /admin/posts');
         exit;
     }
 }

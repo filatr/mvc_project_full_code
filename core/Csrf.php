@@ -1,63 +1,32 @@
 <?php
 
-/**
- * Class Csrf
- *
- * Реалізує захист від CSRF (Cross-Site Request Forgery)
- *
- * Принцип роботи:
- * 1. Генерує унікальний токен
- * 2. Зберігає його в $_SESSION
- * 3. Додає токен у HTML-форми
- * 4. Перевіряє токен при POST-запитах
- *
- * Використовується у:
- * - формах логіну
- * - формах створення / редагування
- * - будь-яких POST-запитах
- */
 class Csrf
 {
     /**
-     * Отримати CSRF-токен
-     *
-     * Якщо токен ще не створений — генерується
-     * і зберігається в сесії
-     *
-     * @return string
+     * Генерує CSRF-токен і зберігає його в сесії
      */
     public static function token(): string
     {
-        if (empty($_SESSION['csrf_token'])) {
-            // Генеруємо криптостійкий випадковий токен
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        if (empty($_SESSION['_csrf'])) {
+            $_SESSION['_csrf'] = bin2hex(random_bytes(32));
         }
 
-        return $_SESSION['csrf_token'];
+        return $_SESSION['_csrf'];
     }
 
     /**
-     * Перевірити CSRF-токен
-     *
-     * @param string|null $token — токен з POST-запиту
-     * @return bool
+     * Перевіряє CSRF-токен з форми
      */
     public static function check(?string $token): bool
     {
-        // Перевіряємо, що токен існує і співпадає
-        return isset($_SESSION['csrf_token'])
-            && is_string($token)
-            && hash_equals($_SESSION['csrf_token'], $token);
-    }
+        if (
+            empty($_SESSION['_csrf']) ||
+            empty($token) ||
+            !hash_equals($_SESSION['_csrf'], $token)
+        ) {
+            return false;
+        }
 
-    /**
-     * Оновити CSRF-токен
-     *
-     * Можна викликати після успішної дії
-     * (наприклад, після логіну або збереження форми)
-     */
-    public static function regenerate(): void
-    {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        return true;
     }
 }
