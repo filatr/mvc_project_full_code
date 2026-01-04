@@ -2,44 +2,38 @@
 
 class Database
 {
-    private static ?Database $instance = null;
-    private PDO $pdo;
+    private static ?PDO $instance = null;
 
     /**
-     * Приватний конструктор — тільки через getInstance()
+     * Повертає єдиний екземпляр PDO (Singleton)
      */
-    private function __construct()
-    {
-        $dbConfig = require ROOT . '/config/db.php';
-
-        $this->pdo = new PDO(
-            $dbConfig['dsn'],
-            $dbConfig['user'],
-            $dbConfig['password'],
-            [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-            ]
-        );
-    }
-
-    /**
-     * Singleton
-     */
-    public static function getInstance(): Database
+    public static function getInstance(): PDO
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+
+            try {
+                self::$instance = new PDO(
+                    $dsn,
+                    DB_USER,
+                    DB_PASS,
+                    [
+                        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_EMULATE_PREPARES   => false,
+                    ]
+                );
+            } catch (PDOException $e) {
+                die('DB connection error: ' . $e->getMessage());
+            }
         }
+
         return self::$instance;
     }
 
     /**
-     * Повертає PDO
+     * Забороняємо створення обʼєкта напряму
      */
-    public function getConnection(): PDO
-    {
-        return $this->pdo;
-    }
+    private function __construct() {}
+    private function __clone() {}
 }

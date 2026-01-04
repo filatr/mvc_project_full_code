@@ -1,37 +1,28 @@
 <?php
+
 /**
- * -------------------------------------------------------
- * User model
- * -------------------------------------------------------
- * Робота з таблицею users
+ * Модель User
+ * Працює з таблицею `users`
  */
 
-require_once ROOT . '/core/Database.php';
+require_once ROOT . '/core/Model.php';
 
-class User
+class User extends Model
 {
     /**
-     * PDO-зʼєднання
+     * Пошук користувача по логіну або email
      */
-    private PDO $db;
-
-    public function __construct()
+    public function findByLoginOrEmail(string $login): ?array
     {
-        // Отримуємо зʼєднання з БД
-        $this->db = Database::getInstance();
-    }
+        $sql = "
+            SELECT *
+            FROM users
+            WHERE username = :login OR email = :login
+            LIMIT 1
+        ";
 
-    /**
-     * Пошук користувача за username
-     *
-     * @param string $username
-     * @return array|null
-     */
-    public function findByUsername(string $username): ?array
-    {
-        $sql = "SELECT * FROM users WHERE username = :username LIMIT 1";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+        $stmt->bindValue(':login', $login, PDO::PARAM_STR);
         $stmt->execute();
 
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -40,22 +31,26 @@ class User
     }
 
     /**
-     * Пошук користувача за ID
+     * Оновлення дати останнього входу
      */
-    public function findById(int $id): ?array
+    public function updateLastLogin(int $userId): void
     {
-        $sql = "SELECT * FROM users WHERE id = :id LIMIT 1";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $sql = "
+            UPDATE users
+            SET last_login = NOW()
+            WHERE id = :id
+        ";
 
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
     }
 
     /**
      * Створення нового користувача
+     * (пізніше — через адмінку)
      */
-    public function create(array $data): bool
+    public function create(array $data): int
     {
         $sql = "
             INSERT INTO users (username, email, password_hash, role)
@@ -63,12 +58,41 @@ class User
         ";
 
         $stmt = $this->db->prepare($sql);
-
-        return $stmt->execute([
+        $stmt->execute([
             ':username'      => $data['username'],
             ':email'         => $data['email'],
             ':password_hash' => password_hash($data['password'], PASSWORD_DEFAULT),
             ':role'          => $data['role'] ?? 'user',
         ]);
+
+        return (int)$this->db->lastInsertId();
+    }
+
+    /**
+     * Отримати користувача по ID
+     */
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM users WHERE id = :id LIMIT 1"
+        );
+        $stmt->execute([':id' => $id]);
+
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $user ?: null;
+    }
+
+    /**
+     * Перевірка, чи існує користувач з таким email
+     */
+    public function existsByEmail(string $email): bool
+    {
+        $stmt = $this->db->prepare(
+            "SELECT id FROM users WHERE email = :email LIMIT 1"
+        );
+        $stmt->execute([':email' => $email]);
+
+        return (bool)$stmt->fetchColumn();
     }
 }

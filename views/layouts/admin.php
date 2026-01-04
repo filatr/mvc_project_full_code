@@ -2,28 +2,17 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title><?= htmlspecialchars($title ?? 'Адмінка', ENT_QUOTES, 'UTF-8') ?></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адмінка</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="container mt-4">
 
-<header>
-    <strong>Адмінка</strong> |
-    <a href="/">Сайт</a> |
-    <a href="/login/logout">Вийти</a>
-</header>
+<nav class="mb-4">
+    <a href="/admin/posts" class="btn btn-secondary">Пости</a>
+    <a href="/" class="btn btn-outline-secondary">На сайт</a>
+</nav>
 
-<hr>
-
-<main>
-    <?php require $viewFile; ?>
-</main>
-
-<hr>
-
-<footer>
-    <small>Admin Panel</small>
-</footer>
+<?= $content ?>
 
 </body>
 </html>

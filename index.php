@@ -1,50 +1,83 @@
 <?php
-/**
- * index.php
- * Єдина точка входу в додаток (Front Controller)
- */
+declare(strict_types=1);
 
-// ================================
-// 1. Увімкнення виводу помилок (тільки для розробки)
-// ================================
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+/*
+|--------------------------------------------------------------------------
+| Debug (для розробки)
+|--------------------------------------------------------------------------
+*/
+ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
-// ================================
-// 2. Константи шляхів
-// ================================
+/*
+|--------------------------------------------------------------------------
+| Константи
+|--------------------------------------------------------------------------
+*/
+define('ROOT', dirname(__FILE__));
+define('CORE', ROOT . '/core');
+define('CONTROLLERS', ROOT . '/controllers');
+define('MODELS', ROOT . '/models');
+define('VIEWS', ROOT . '/views');
 
-// Абсолютний шлях до кореня проєкту
-define('ROOT', __DIR__);
+/*
+|--------------------------------------------------------------------------
+| Autoload
+|--------------------------------------------------------------------------
+*/
+spl_autoload_register(function ($class) {
 
-// Шлях до папки з кодом
-define('APP_PATH', ROOT);
+    $paths = [
+        CORE . '/' . $class . '.php',
+        CONTROLLERS . '/' . $class . '.php',
+        MODELS . '/' . $class . '.php',
+    ];
 
-// ================================
-// 3. Підключення базових файлів ядра
-// ================================
+    foreach ($paths as $file) {
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
 
-require_once ROOT . '/core/Database.php';
-require_once ROOT . '/core/Model.php';
-require_once ROOT . '/core/View.php';
-require_once ROOT . '/core/Controller.php';
-require_once ROOT . '/core/Router.php';
-require_once ROOT . '/core/Auth.php';
+/*
+|--------------------------------------------------------------------------
+| Router
+|--------------------------------------------------------------------------
+*/
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$uri = trim($uri, '/');
+$segments = $uri === '' ? [] : explode('/', $uri);
 
-// ================================
-// 4. Запуск роутера
-// ================================
+$controllerName = 'HomeController';
+$actionName = 'index';
+$params = [];
 
-try {
-    $router = new Router();
-    $router->dispatch();
-} catch (Throwable $e) {
-    // ================================
-    // 5. Глобальна обробка помилок
-    // ================================
-    http_response_code(500);
-
-    echo '<h1>500 — Внутрішня помилка сервера</h1>';
-    echo '<pre>' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</pre>';
+if (!empty($segments[0])) {
+    $controllerName = ucfirst($segments[0]) . 'Controller';
 }
+if (!empty($segments[1])) {
+    $actionName = $segments[1];
+}
+if (count($segments) > 2) {
+    $params = array_slice($segments, 2);
+}
+
+$controllerFile = CONTROLLERS . '/' . $controllerName . '.php';
+
+if (!file_exists($controllerFile)) {
+    http_response_code(404);
+    exit('Controller not found');
+}
+
+require_once $controllerFile;
+
+$controller = new $controllerName();
+
+if (!method_exists($controller, $actionName)) {
+    http_response_code(404);
+    exit('Action not found');
+}
+
+call_user_func_array([$controller, $actionName], $params);

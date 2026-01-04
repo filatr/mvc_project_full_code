@@ -1,65 +1,28 @@
 <?php
-/**
- * SitemapController
- * Відповідає за генерацію sitemap.xml
- */
 
-require_once __DIR__ . '/../core/Controller.php';
-require_once __DIR__ . '/../models/Post.php';
+require_once ROOT . '/core/Controller.php';
+require_once ROOT . '/models/Post.php';
 
-class SitemapController extends Controller
+class PostController extends Controller
 {
-    public function index()
+    public function view(string $slug): void
     {
-        // Заголовок XML
-        header('Content-Type: application/xml; charset=UTF-8');
-
         $postModel = new Post();
-        $posts = $postModel->getAllPublished();
+        $post = $postModel->getBySlug($slug);
 
-        echo '<?xml version="1.0" encoding="UTF-8"?>';
-        echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-
-        // Головна сторінка
-        echo $this->urlBlock('/', 'daily', '1.0');
-
-        foreach ($posts as $post) {
-            echo $this->urlBlock(
-                '/post/' . $post['id'],
-                'weekly',
-                '0.8',
-                $post['updated_at']
-            );
+        if (!$post) {
+            http_response_code(404);
+            die('Сторінку не знайдено');
         }
 
-        echo '</urlset>';
-    }
+        $this->view->set('title', $post['title']);
+        $this->view->set(
+            'description',
+            mb_substr(strip_tags($post['content']), 0, 160)
+        );
 
-    /**
-     * Формування одного <url>
-     */
-    private function urlBlock($loc, $freq, $priority, $lastmod = null)
-    {
-        $baseUrl = $this->getBaseUrl();
-
-        $xml  = '<url>';
-        $xml .= '<loc>' . htmlspecialchars($baseUrl . $loc) . '</loc>';
-        if ($lastmod) {
-            $xml .= '<lastmod>' . date('Y-m-d', strtotime($lastmod)) . '</lastmod>';
-        }
-        $xml .= '<changefreq>' . $freq . '</changefreq>';
-        $xml .= '<priority>' . $priority . '</priority>';
-        $xml .= '</url>';
-
-        return $xml;
-    }
-
-    /**
-     * Визначення базового URL
-     */
-    private function getBaseUrl()
-    {
-        return (isset($_SERVER['HTTPS']) ? 'https' : 'http')
-            . '://' . $_SERVER['HTTP_HOST'];
+        $this->view->render('post/view', [
+            'post' => $post
+        ]);
     }
 }

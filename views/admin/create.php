@@ -1,71 +1,14 @@
-<?php
-/**
- * Адмінка: створення нового поста
- * 
- * Очікує змінні:
- * - $title
- * - $error (необовʼязково)
- */
-?>
-
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <title><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 20px;
-        }
-        form {
-            background: #fff;
-            padding: 20px;
-            max-width: 700px;
-        }
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-        }
-        textarea {
-            min-height: 150px;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px 15px;
-        }
-        .error {
-            color: red;
-        }
-    </style>
-</head>
-<body>
-
-<h1><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></h1>
-
-<?php if (!empty($error)): ?>
-    <p class="error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
-<?php endif; ?>
+<h2>Новий пост</h2>
 
 <form method="post">
-    <label>Заголовок</label>
-    <input type="text" name="title" required>
+    <input type="text" name="title" placeholder="Заголовок" required><br><br>
 
-    <label>Текст поста</label>
-    <textarea name="content" required></textarea>
+    <textarea name="content" placeholder="Текст" rows="8" required></textarea><br><br>
 
-    <button type="submit">💾 Зберегти</button>
+    <select name="status">
+        <option value="draft">Чернетка</option>
+        <option value="published">Опубліковано</option>
+    </select><br><br>
+
+    <button>Зберегти</button>
 </form>
-
-<p><a href="/admin">← Назад</a></p>
-
-</body>
-</html>

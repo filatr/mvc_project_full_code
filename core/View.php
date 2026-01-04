@@ -2,33 +2,25 @@
 
 class View
 {
-    private string $theme;
-
-    public function __construct()
+    public static function render(string $view, array $data = []): void
     {
-        $config = require ROOT . '/config/config.php';
-        $this->theme = $config['theme'] ?? 'default';
-    }
+        extract($data, EXTR_SKIP);
 
-    public function render(string $view, array $data = []): void
-    {
-        extract($data);
-
-        $viewFile = ROOT . '/views/' . $view . '.php';
-        $layoutFile = ROOT . '/themes/' . $this->theme . '/layout.php';
+        $viewFile = VIEWS . '/' . $view . '.php';
+        $layoutFile = VIEWS . '/layouts/main.php';
 
         if (!file_exists($viewFile)) {
-            throw new Exception("View не знайдено: $viewFile");
-        }
-
-        if (!file_exists($layoutFile)) {
-            throw new Exception("Layout не знайдено: $layoutFile");
+            throw new Exception("View file not found: {$viewFile}");
         }
 
         ob_start();
         require $viewFile;
         $content = ob_get_clean();
 
-        require $layoutFile;
+        if (file_exists($layoutFile)) {
+            require $layoutFile;
+        } else {
+            echo $content;
+        }
     }
 }

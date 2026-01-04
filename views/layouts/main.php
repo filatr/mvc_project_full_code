@@ -1,55 +1,22 @@
-<?php
-/**
- * views/layouts/main.php
- * Основний layout сайту
- *
- * Змінна $content містить HTML конкретного шаблону
- * (наприклад: views/home/index.php)
- */
-?>
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
+    <title><?= htmlspecialchars($title ?? 'Сайт') ?></title>
 
-    <!-- Базовий meta viewport -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Базовий title (пізніше зробимо динамічним) -->
-    <title>Мій сайт</title>
-
-    <!-- Тут пізніше можна підключити CSS теми -->
-    <!-- <link rel="stylesheet" href="/assets/css/style.css"> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 
-<header>
-    <h1>Мій сайт</h1>
-    <nav>
-        <a href="/">Головна</a>
-        <a href="/login">Вхід</a>
-        <a href="/admin">Адмінка</a>
-    </nav>
-    <hr>
-</header>
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">Мій сайт</a>
+    </div>
+</nav>
 
-<main>
-    <?php
-    /**
-     * Вивід контенту конкретної сторінки
-     * Контент формується у View через буферизацію
-     */
-    echo $content;
-    ?>
-</main>
-
-<footer>
-    <hr>
-    <small>&copy; <?= date('Y') ?> Мій сайт</small>
-</footer>
-
-<!-- Тут пізніше можна підключати JS -->
-<!-- <script src="/assets/js/app.js"></script> -->
+<div class="container">
+    <?= $content ?>
+</div>
 
 </body>
 </html>

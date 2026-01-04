@@ -2,100 +2,71 @@
 
 require_once ROOT . '/models/Post.php';
 
-class AdminController
+class AdminPostController
 {
     private Post $postModel;
-    private View $view;
 
     public function __construct()
     {
-        Auth::requireAdmin();
-
         $this->postModel = new Post();
-        $this->view = new View();
-    }
-
-    public function index(): void
-    {
-        $posts = $this->postModel->getLatest(50);
-
-        $this->view->render('admin/index', [
-            'title' => 'Адмінка',
-            'posts' => $posts
-        ]);
-    }
-
-    public function create(): void
-    {
-        $error = null;
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = trim($_POST['title'] ?? '');
-            $content = trim($_POST['content'] ?? '');
-
-            if ($title === '' || $content === '') {
-                $error = 'Заповніть усі поля';
-            } else {
-                $this->postModel->create($title, $content);
-                header('Location: /admin');
-                exit;
-            }
-        }
-
-        $this->view->render('admin/create', [
-            'title' => 'Створити пост',
-            'error' => $error
-        ]);
-    }
-
-    public function edit(int $id): void
-    {
-        $post = $this->postModel->getById($id);
-
-        if (!$post) {
-            http_response_code(404);
-            echo 'Пост не знайдено';
-            return;
-        }
-
-        $error = null;
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = trim($_POST['title'] ?? '');
-            $content = trim($_POST['content'] ?? '');
-
-            if ($title === '' || $content === '') {
-                $error = 'Усі поля обовʼязкові';
-            } else {
-                $this->postModel->update($id, $title, $content);
-                header('Location: /admin');
-                exit;
-            }
-        }
-
-        $this->view->render('admin/edit', [
-            'title' => 'Редагувати пост',
-            'post' => $post,
-            'error' => $error
-        ]);
     }
 
     /**
-     * ❌ Видалення поста
+     * Список постів (admin)
      */
-    public function delete(int $id): void
+    public function index()
     {
-        $post = $this->postModel->getById($id);
+        $posts = $this->postModel->getAll();
 
-        if (!$post) {
-            http_response_code(404);
-            echo 'Пост не знайдено';
-            return;
+        require ROOT . '/views/admin/posts/index.php';
+    }
+
+    /**
+     * Створення поста
+     */
+    public function create()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = trim($_POST['title']);
+            $content = trim($_POST['content']);
+
+            $this->postModel->create($title, $content);
+
+            header('Location: /admin/posts');
+            exit;
         }
 
+        require ROOT . '/views/admin/posts/create.php';
+    }
+
+    /**
+     * Редагування поста
+     */
+    public function edit($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = trim($_POST['title']);
+            $content = trim($_POST['content']);
+
+            $this->postModel->update($id, $title, $content);
+
+            header('Location: /admin/posts');
+            exit;
+        }
+
+        $post = $this->postModel->getById($id);
+
+        require ROOT . '/views/admin/posts/edit.php';
+    }
+
+    /**
+     * Видалення поста
+     */
+    public function delete($id)
+    {
         $this->postModel->delete($id);
 
-        header('Location: /admin');
+        header('Location: /admin/posts');
         exit;
     }
 }

@@ -1,19 +1,15 @@
 <?php
-/**
- * controllers/HomeController.php
- */
 
-require_once ROOT . '/core/Controller.php';
-require_once ROOT . '/models/Post.php';
-
-class HomeController extends Controller
+class HomeController
 {
     public function index(): void
     {
         $postModel = new Post();
-        $posts = $postModel->getLatestPublished(5);
+        $posts = $postModel->getLatest();
 
-        $this->view->set('posts', $posts);
-        $this->view->render('home/index');
+        View::render('post/index', [
+            'posts' => $posts,
+            'title' => 'Головна сторінка'
+        ]);
     }
 }

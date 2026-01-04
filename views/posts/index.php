@@ -1,23 +1,22 @@
-<h1>Останні публікації</h1>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title><?= htmlspecialchars($title ?? 'Сайт') ?></title>
 
-<?php if (empty($posts)): ?>
-    <p>Поки що немає жодної публікації.</p>
-<?php else: ?>
-    <?php foreach ($posts as $post): ?>
-        <article style="margin-bottom: 20px;">
-            <h2>
-                <a href="/post/view?id=<?= (int)$post['id'] ?>">
-                    <?= htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') ?>
-                </a>
-            </h2>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
 
-            <p>
-                <?= nl2br(htmlspecialchars(mb_substr($post['content'], 0, 200), ENT_QUOTES, 'UTF-8')) ?>...
-            </p>
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">Мій сайт</a>
+    </div>
+</nav>
 
-            <small>
-                Переглядів: <?= (int)$post['views'] ?>
-            </small>
-        </article>
-    <?php endforeach; ?>
-<?php endif; ?>
+<div class="container">
+    <?= $content ?>
+</div>
+
+</body>
+</html>

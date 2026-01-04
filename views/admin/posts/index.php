@@ -1,16 +1,29 @@
-<h1>Записи</h1>
+<?php ob_start(); ?>
 
-<p><a href="/adminpost/create">+ Додати</a></p>
+<h1>Пости</h1>
 
-<ul>
-<?php foreach ($posts as $post): ?>
-    <li>
-        <?= htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') ?>
-        |
-        <a href="/adminpost/edit?id=<?= $post['id'] ?>">Редагувати</a>
-        |
-        <a href="/adminpost/delete?id=<?= $post['id'] ?>"
-           onclick="return confirm('Видалити?')">Видалити</a>
-    </li>
-<?php endforeach; ?>
-</ul>
+<a href="/admin/posts/create" class="btn btn-primary mb-3">+ Додати пост</a>
+
+<table class="table table-bordered">
+    <tr>
+        <th>ID</th>
+        <th>Заголовок</th>
+        <th>Дії</th>
+    </tr>
+
+    <?php foreach ($posts as $post): ?>
+        <tr>
+            <td><?= (int)$post['id'] ?></td>
+            <td><?= htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') ?></td>
+            <td>
+                <a href="/admin/posts/edit/<?= $post['id'] ?>" class="btn btn-sm btn-warning">Редагувати</a>
+                <a href="/admin/posts/delete/<?= $post['id'] ?>" class="btn btn-sm btn-danger"
+                   onclick="return confirm('Видалити?')">Видалити</a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</table>
+
+<?php
+$content = ob_get_clean();
+require ROOT . '/views/layouts/admin.php';

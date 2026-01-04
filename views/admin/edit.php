@@ -1,39 +1,15 @@
-<?php
-/**
- * Редагування поста
- * Змінна $post гарантовано існує
- */
-?>
-
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <title><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></title>
-</head>
-<body>
-
-<h1><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></h1>
-
-<?php if (!empty($error)): ?>
-    <p style="color:red;">
-        <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
-    </p>
-<?php endif; ?>
+<h2>Редагування</h2>
 
 <form method="post">
-    <label>Заголовок</label><br>
     <input type="text" name="title"
-           value="<?= htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') ?>"
-           required><br><br>
+        value="<?= htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') ?>" required><br><br>
 
-    <label>Текст</label><br>
-    <textarea name="content" required><?= htmlspecialchars($post['content'], ENT_QUOTES, 'UTF-8') ?></textarea><br><br>
+    <textarea name="content" rows="8" required><?= htmlspecialchars($post['content'], ENT_QUOTES, 'UTF-8') ?></textarea><br><br>
 
-    <button type="submit">💾 Оновити</button>
+    <select name="status">
+        <option value="draft" <?= $post['status'] === 'draft' ? 'selected' : '' ?>>Чернетка</option>
+        <option value="published" <?= $post['status'] === 'published' ? 'selected' : '' ?>>Опубліковано</option>
+    </select><br><br>
+
+    <button>Оновити</button>
 </form>
-
-<p><a href="/admin">← Назад</a></p>
-
-</body>
-</html>

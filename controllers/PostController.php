@@ -1,36 +1,31 @@
 <?php
 
-require_once ROOT . '/models/Post.php';
-
 class PostController
 {
-    private Post $postModel;
-    private View $view;
-
-    public function __construct()
+    public function index(): void
     {
-        $this->postModel = new Post();
-        $this->view = new View();
+        $postModel = new Post();
+        $posts = $postModel->getLatest();
+
+        View::render('post/index', [
+            'posts' => $posts,
+            'title' => 'Всі пости'
+        ]);
     }
 
-    /**
-     * Перегляд поста
-     */
     public function view(string $slug): void
     {
-        $post = $this->postModel->getBySlug($slug);
+        $postModel = new Post();
+        $post = $postModel->getBySlug($slug);
 
         if (!$post) {
             http_response_code(404);
-            echo 'Пост не знайдено';
-            return;
+            exit('Post not found');
         }
 
-        $this->postModel->incrementViews((int)$post['id']);
-
-        $this->view->render('post/view', [
-            'title' => $post['title'],
-            'post' => $post
+        View::render('post/view', [
+            'post' => $post,
+            'title' => $post['title']
         ]);
     }
 }

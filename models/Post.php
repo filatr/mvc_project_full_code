@@ -1,122 +1,53 @@
 <?php
 
+require_once ROOT . '/core/Model.php';
+
 class Post extends Model
 {
-    /**
-     * Отримати список постів
-     */
-    public function getLatest(int $limit = 10): array
+    public function getAll(): array
     {
-        $stmt = $this->db->prepare("
-            SELECT id, title, slug, created_at
-            FROM posts
-            ORDER BY created_at DESC
-            LIMIT :limit
-        ");
-
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-
+        $stmt = $this->db->query("SELECT * FROM posts ORDER BY id DESC");
         return $stmt->fetchAll();
     }
 
-    /**
-     * Отримати пост по slug
-     */
-    public function getBySlug(string $slug): ?array
+    public function getById(int $id): array|false
     {
-        $stmt = $this->db->prepare("
-            SELECT *
-            FROM posts
-            WHERE slug = :slug
-            LIMIT 1
-        ");
-
-        $stmt->execute([':slug' => $slug]);
-        $post = $stmt->fetch();
-
-        return $post ?: null;
+        $stmt = $this->db->prepare("SELECT * FROM posts WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch();
     }
 
-    /**
-     * Отримати пост по ID
-     */
-    public function getById(int $id): ?array
+    public function create(string $title, string $content): bool
     {
         $stmt = $this->db->prepare("
-            SELECT *
-            FROM posts
-            WHERE id = :id
-            LIMIT 1
+            INSERT INTO posts (title, content, created_at)
+            VALUES (:title, :content, NOW())
         ");
 
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetch() ?: null;
-    }
-
-    /**
-     * Створення поста
-     */
-    public function create(string $title, string $content): void
-    {
-        $slug = $this->generateSlug($title);
-
-        $stmt = $this->db->prepare("
-            INSERT INTO posts (title, slug, content, created_at)
-            VALUES (:title, :slug, :content, NOW())
-        ");
-
-        $stmt->execute([
-            ':title' => $title,
-            ':slug' => $slug,
-            ':content' => $content
+        return $stmt->execute([
+            'title'   => $title,
+            'content' => $content
         ]);
     }
 
-    /**
-     * Оновлення поста
-     */
-    public function update(int $id, string $title, string $content): void
+    public function update(int $id, string $title, string $content): bool
     {
-        $slug = $this->generateSlug($title);
-
         $stmt = $this->db->prepare("
             UPDATE posts
-            SET title = :title,
-                slug = :slug,
-                content = :content
+            SET title = :title, content = :content
             WHERE id = :id
         ");
 
-        $stmt->execute([
-            ':id' => $id,
-            ':title' => $title,
-            ':slug' => $slug,
-            ':content' => $content
+        return $stmt->execute([
+            'id'      => $id,
+            'title'   => $title,
+            'content' => $content
         ]);
     }
 
-    /**
-     * Збільшити лічильник переглядів
-     */
-    public function incrementViews(int $id): void
+    public function delete(int $id): bool
     {
-        $this->db->prepare("
-            UPDATE posts
-            SET views = views + 1
-            WHERE id = :id
-        ")->execute([':id' => $id]);
-    }
-
-    /**
-     * Генерація slug
-     */
-    private function generateSlug(string $text): string
-    {
-        $text = mb_strtolower($text, 'UTF-8');
-        $text = preg_replace('/[^a-zа-я0-9]+/u', '-', $text);
-        $text = trim($text, '-');
-
-        return $text ?: uniqid('post-');
+        $stmt = $this->db->prepare("DELETE FROM posts WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
     }
 }

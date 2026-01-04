@@ -1,8 +1,4 @@
 User-agent: *
-Disallow: /admin
-Disallow: /login
-Disallow: /logout
-
 Allow: /
 
-Sitemap: https://ВАШ-ДОМЕН/sitemap.xml
+Sitemap: https://pdv0.mytraf.in.ua/sitemap.xml

@@ -1,16 +1,21 @@
-<h1>Новий запис</h1>
+<?php ob_start(); ?>
 
-<form method="post" enctype="multipart/form-data">
+<h1>Новий пост</h1>
 
-    <label>Заголовок</label>
-    <input type="text" name="title" required>
+<form method="post">
+    <div class="mb-3">
+        <label>Заголовок</label>
+        <input type="text" name="title" class="form-control" required>
+    </div>
 
-    <label>Опис</label>
-    <textarea name="description"></textarea>
+    <div class="mb-3">
+        <label>Контент</label>
+        <textarea name="content" class="form-control" rows="6" required></textarea>
+    </div>
 
-    <label>Зображення</label>
-    <input type="file" name="image" accept="image/*">
-
-    <button type="submit">Зберегти</button>
-
+    <button class="btn btn-success">Зберегти</button>
 </form>
+
+<?php
+$content = ob_get_clean();
+require ROOT . '/views/layouts/admin.php';
