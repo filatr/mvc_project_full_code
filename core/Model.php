@@ -1,11 +1,11 @@
 <?php
 
-abstract class Model
+class Model
 {
     protected PDO $db;
 
     public function __construct()
     {
-        $this->db = Database::getInstance();
+        $this->db = Database::getInstance()->getConnection();
     }
 }

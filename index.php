@@ -2,12 +2,24 @@
 session_start();
 
 /**
- * Абсолютний шлях до кореня проєкту
+ * Абсолютний шлях до кореня
  */
 define('ROOT', dirname(__FILE__));
 
 /**
- * Простий autoload для MVC
+ * Конфіг БД
+ */
+require_once ROOT . '/config/database.php';
+
+/**
+ * БАЗОВІ КЛАСИ MVC
+ * ЇХ ТРЕБА ПІДКЛЮЧАТИ ЯВНО
+ */
+require_once ROOT . '/core/Database.php';
+require_once ROOT . '/core/Model.php';
+
+/**
+ * Autoload для решти класів
  */
 spl_autoload_register(function ($class) {
     $paths = [
@@ -25,8 +37,7 @@ spl_autoload_register(function ($class) {
 });
 
 /**
- * Простий роутинг
- * приклад: /post/view/slug
+ * Роутинг
  */
 $url = trim($_GET['url'] ?? '', '/');
 $parts = explode('/', $url);

@@ -1,13 +1,6 @@
 <?php
-
-return [
-    // DSN для PDO
-    // приклад: mysql:host=localhost;dbname=test;charset=utf8mb4
-    'dsn' => 'mysql:host=localhost;dbname=mvc_project;charset=utf8mb4',
-
-    // Користувач БД
-    'user' => 'mvc_user',
-
-    // Пароль БД
-    'password' => 'mvc_password',
-];
+define('DB_HOST','db24.freehost.com.ua');
+define('DB_NAME','buyorifla_pdv0');
+define('DB_USER','buyorifla_pdv0');
+define('DB_PASS','rPris5Ilh');
+define('DB_CHARSET', 'utf8mb4');
