@@ -1,61 +1,53 @@
 <?php
+session_start();
 
+/**
+ * Абсолютний шлях до кореня проєкту
+ */
 define('ROOT', dirname(__FILE__));
 
-require_once ROOT . '/core/Database.php';
-require_once ROOT . '/core/Model.php';
-require_once ROOT . '/core/Auth.php';
+/**
+ * Простий autoload для MVC
+ */
+spl_autoload_register(function ($class) {
+    $paths = [
+        ROOT . '/core/' . $class . '.php',
+        ROOT . '/controllers/' . $class . '.php',
+        ROOT . '/models/' . $class . '.php',
+    ];
 
-Auth::start();
+    foreach ($paths as $file) {
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
 
-$url = trim($_SERVER['REQUEST_URI'], '/');
+/**
+ * Простий роутинг
+ * приклад: /post/view/slug
+ */
+$url = trim($_GET['url'] ?? '', '/');
 $parts = explode('/', $url);
 
-// ======= ROUTING =======
+$controllerName = !empty($parts[0])
+    ? ucfirst($parts[0]) . 'Controller'
+    : 'HomeController';
 
-if ($url === '') {
-    require_once ROOT . '/controllers/HomeController.php';
-    (new HomeController())->index();
-    exit;
+$action = $parts[1] ?? 'index';
+$param = $parts[2] ?? null;
+
+if (!class_exists($controllerName)) {
+    http_response_code(404);
+    exit('Controller not found');
 }
 
-// ---------- AUTH ----------
-if ($url === 'login') {
-    require_once ROOT . '/controllers/AuthController.php';
-    (new AuthController())->login();
-    exit;
+$controller = new $controllerName();
+
+if (!method_exists($controller, $action)) {
+    http_response_code(404);
+    exit('Action not found');
 }
 
-if ($url === 'logout') {
-    Auth::logout();
-    header('Location: /');
-    exit;
-}
-
-// ---------- ADMIN ----------
-if ($parts[0] === 'admin') {
-    require_once ROOT . '/controllers/AdminPostController.php';
-    $controller = new AdminPostController();
-
-    $action = $parts[2] ?? 'index';
-    $id = $parts[3] ?? null;
-
-    if (method_exists($controller, $action)) {
-        $controller->$action($id);
-    } else {
-        http_response_code(404);
-        echo 'Admin page not found';
-    }
-    exit;
-}
-
-// ---------- POSTS ----------
-if ($parts[0] === 'post') {
-    require_once ROOT . '/controllers/PostController.php';
-    (new PostController())->view($parts[1] ?? null);
-    exit;
-}
-
-// ---------- 404 ----------
-http_response_code(404);
-echo 'Page not found';
+$controller->$action($param);

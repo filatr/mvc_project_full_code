@@ -35,7 +35,15 @@ class Post extends Model
 
         return $stmt->fetchAll();
     }
+public function getLatestPublished()
+    {
+        $sql = "SELECT * FROM posts
+                WHERE is_published = 1
+                ORDER BY created_at DESC
+                LIMIT 10";
 
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
     /**
      * Отримати пост по ID
      */
