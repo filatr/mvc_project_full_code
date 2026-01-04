@@ -1,64 +1,39 @@
 <?php
-session_start();
 
-/**
- * Абсолютний шлях до кореня
- */
 define('ROOT', dirname(__FILE__));
 
-/**
- * Конфіг БД
- */
-require_once ROOT . '/config/database.php';
-
-/**
- * БАЗОВІ КЛАСИ MVC
- * ЇХ ТРЕБА ПІДКЛЮЧАТИ ЯВНО
- */
+require_once ROOT . '/config/config.php';
 require_once ROOT . '/core/Database.php';
 require_once ROOT . '/core/Model.php';
+require_once ROOT . '/core/View.php';
+require_once ROOT . '/core/Controller.php';
+require_once ROOT . '/core/Auth.php';
 
-/**
- * Autoload для решти класів
- */
-spl_autoload_register(function ($class) {
-    $paths = [
-        ROOT . '/core/' . $class . '.php',
-        ROOT . '/controllers/' . $class . '.php',
-        ROOT . '/models/' . $class . '.php',
-    ];
+Auth::start();
 
-    foreach ($paths as $file) {
-        if (file_exists($file)) {
-            require_once $file;
-            return;
-        }
-    }
-});
+$uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 
-/**
- * Роутинг
- */
-$url = trim($_GET['url'] ?? '', '/');
-$parts = explode('/', $url);
+$parts = explode('/', $uri);
 
-$controllerName = !empty($parts[0])
-    ? ucfirst($parts[0]) . 'Controller'
-    : 'HomeController';
+$controllerName = $parts[0] ?: 'home';
+$actionName     = $parts[1] ?? 'index';
+$param          = $parts[2] ?? null;
 
-$action = $parts[1] ?? 'index';
-$param = $parts[2] ?? null;
+$controllerClass = ucfirst($controllerName) . 'Controller';
+$controllerFile  = ROOT . '/controllers/' . $controllerClass . '.php';
 
-if (!class_exists($controllerName)) {
+if (!file_exists($controllerFile)) {
     http_response_code(404);
-    exit('Controller not found');
+    die('Controller not found');
 }
 
-$controller = new $controllerName();
+require_once $controllerFile;
 
-if (!method_exists($controller, $action)) {
+$controller = new $controllerClass();
+
+if (!method_exists($controller, $actionName)) {
     http_response_code(404);
-    exit('Action not found');
+    die('Action not found');
 }
 
-$controller->$action($param);
+$controller->$actionName($param);

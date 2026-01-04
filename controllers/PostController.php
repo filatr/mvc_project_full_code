@@ -1,31 +1,47 @@
 <?php
 
-class PostController
-{
-    public function index(): void
-    {
-        $postModel = new Post();
-        $posts = $postModel->getLatest();
+define('ROOT', dirname(__FILE__));
 
-        View::render('post/index', [
-            'posts' => $posts,
-            'title' => 'Всі пости'
-        ]);
-    }
+require_once ROOT . '/config/database.php';
+require_once ROOT . '/core/Database.php';
+require_once ROOT . '/core/Model.php';
+require_once ROOT . '/core/View.php';
+require_once ROOT . '/core/Controller.php';
 
-    public function view(string $slug): void
-    {
-        $postModel = new Post();
-        $post = $postModel->getBySlug($slug);
+// Простий автолоадер
+spl_autoload_register(function ($class) {
+    $paths = [
+        ROOT . '/controllers/' . $class . '.php',
+        ROOT . '/models/' . $class . '.php',
+        ROOT . '/core/' . $class . '.php',
+    ];
 
-        if (!$post) {
-            http_response_code(404);
-            exit('Post not found');
+    foreach ($paths as $file) {
+        if (file_exists($file)) {
+            require_once $file;
+            return;
         }
-
-        View::render('post/view', [
-            'post' => $post,
-            'title' => $post['title']
-        ]);
     }
+});
+
+// Router (мінімальний)
+$controllerName = 'HomeController';
+$action = 'index';
+
+if (isset($_GET['url'])) {
+    $parts = explode('/', trim($_GET['url'], '/'));
+    $controllerName = ucfirst($parts[0]) . 'Controller';
+    $action = $parts[1] ?? 'index';
 }
+
+if (!class_exists($controllerName)) {
+    die("Controller not found: $controllerName");
+}
+
+$controller = new $controllerName();
+
+if (!method_exists($controller, $action)) {
+    die("Action not found: $action");
+}
+
+$controller->$action();

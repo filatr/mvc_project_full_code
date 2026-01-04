@@ -1,10 +1,8 @@
-<?php ob_start(); ?>
+<h1>Адмінка — Записи</h1>
 
-<h1>Пости</h1>
+<p><a href="/adminpost/create">➕ Додати запис</a></p>
 
-<a href="/admin/posts/create" class="btn btn-primary mb-3">+ Додати пост</a>
-
-<table class="table table-bordered">
+<table border="1" cellpadding="5">
     <tr>
         <th>ID</th>
         <th>Заголовок</th>
@@ -13,17 +11,13 @@
 
     <?php foreach ($posts as $post): ?>
         <tr>
-            <td><?= (int)$post['id'] ?></td>
-            <td><?= htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') ?></td>
+            <td><?php echo $post['id']; ?></td>
+            <td><?php echo htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
-                <a href="/admin/posts/edit/<?= $post['id'] ?>" class="btn btn-sm btn-warning">Редагувати</a>
-                <a href="/admin/posts/delete/<?= $post['id'] ?>" class="btn btn-sm btn-danger"
-                   onclick="return confirm('Видалити?')">Видалити</a>
+                <a href="/adminpost/edit/<?php echo $post['id']; ?>">✏️</a>
+                <a href="/adminpost/delete/<?php echo $post['id']; ?>"
+                   onclick="return confirm('Видалити?')">🗑️</a>
             </td>
         </tr>
     <?php endforeach; ?>
 </table>
-
-<?php
-$content = ob_get_clean();
-require ROOT . '/views/layouts/admin.php';

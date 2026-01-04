@@ -1,32 +1,21 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <title>Вхід</title>
-</head>
-<body>
-
-<h1>Вхід в адмінку</h1>
+<h1>Вхід</h1>
 
 <?php if (!empty($error)): ?>
     <p style="color:red;">
-        <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
+        <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?>
     </p>
 <?php endif; ?>
 
 <form method="post">
-    <div>
-        <label>Email</label><br>
+    <label>
+        Email:<br>
         <input type="email" name="email" required>
-    </div>
+    </label><br><br>
 
-    <div>
-        <label>Пароль</label><br>
+    <label>
+        Пароль:<br>
         <input type="password" name="password" required>
-    </div>
+    </label><br><br>
 
     <button type="submit">Увійти</button>
 </form>
-
-</body>
-</html>

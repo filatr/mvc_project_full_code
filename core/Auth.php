@@ -2,7 +2,7 @@
 
 class Auth
 {
-    public static function start()
+    public static function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -12,10 +12,11 @@ class Auth
     public static function login(array $user): void
     {
         self::start();
+
         $_SESSION['user'] = [
             'id'    => $user['id'],
             'email' => $user['email'],
-            'role'  => $user['role'] ?? 'user',
+            'role'  => $user['role'],
         ];
     }
 
@@ -25,7 +26,7 @@ class Auth
         unset($_SESSION['user']);
     }
 
-    public static function user(): ?array
+    public static function user(): array|null
     {
         self::start();
         return $_SESSION['user'] ?? null;
@@ -39,21 +40,5 @@ class Auth
     public static function isAdmin(): bool
     {
         return self::check() && self::user()['role'] === 'admin';
-    }
-
-    public static function requireLogin(): void
-    {
-        if (!self::check()) {
-            header('Location: /login');
-            exit;
-        }
-    }
-
-    public static function requireAdmin(): void
-    {
-        if (!self::isAdmin()) {
-            header('Location: /login');
-            exit;
-        }
     }
 }

@@ -1,54 +1,32 @@
 <?php
-/**
- * Контролер авторизації
- * Відповідає за:
- *  - логін
- *  - логаут
- */
 
+require_once ROOT . '/core/Controller.php';
 require_once ROOT . '/models/User.php';
 require_once ROOT . '/core/Auth.php';
 
-class AuthController
+class AuthController extends Controller
 {
-    /**
-     * Сторінка логіну
-     */
     public function login(): void
     {
-        $error = null;
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = trim($_POST['username'] ?? '');
+            $email    = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
 
-            if ($username === '' || $password === '') {
-                $error = 'Заповніть усі поля';
-            } else {
-                $userModel = new User();
-                $user = $userModel->findByUsername($username);
+            $userModel = new User();
+            $user = $userModel->findByEmail($email);
 
-                if ($user && password_verify($password, $user['password'])) {
-                    $_SESSION['user'] = [
-                        'id'       => $user['id'],
-                        'username' => $user['username'],
-                        'role'     => $user['role']
-                    ];
-
-                    header('Location: /admin/posts');
-                    exit;
-                }
-
-                $error = 'Невірний логін або пароль';
+            if ($user && password_verify($password, $user['password'])) {
+                Auth::login($user);
+                header('Location: /admin');
+                exit;
             }
+
+            $this->view->set('error', 'Невірний email або пароль');
         }
 
-        require ROOT . '/views/auth/login.php';
+        $this->view->render('auth/login');
     }
 
-    /**
-     * Вихід із системи
-     */
     public function logout(): void
     {
         Auth::logout();
