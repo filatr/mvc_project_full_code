@@ -1,122 +1,65 @@
--- --------------------------------------------------------
--- Створення бази даних
--- --------------------------------------------------------
-CREATE DATABASE IF NOT EXISTS `pdv0_mvc` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `pdv0_mvc`;
+-- ================================
+-- DATABASE: mvc_project
+-- ================================
 
--- --------------------------------------------------------
--- Таблиця users
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `username` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(255) NOT NULL,
-  `password_hash` VARCHAR(255) NOT NULL,
-  `role` ENUM('user','editor','admin') DEFAULT 'user',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `last_login` DATETIME DEFAULT NULL,
-  `login_attempts` INT DEFAULT 0,
-  `is_blocked` TINYINT(1) DEFAULT 0,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE DATABASE IF NOT EXISTS mvc_project
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
 
--- Тестові користувачі
-INSERT INTO `users` (`username`, `email`, `password_hash`, `role`)
-VALUES 
-('admin', 'admin@example.com', '$2y$10$examplehash', 'admin'),
-('editor', 'editor@example.com', '$2y$10$examplehash', 'editor'),
-('user1', 'user1@example.com', '$2y$10$examplehash', 'user');
+USE mvc_project;
 
--- --------------------------------------------------------
--- Таблиця posts
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `posts` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(255) NOT NULL,
-  `slug` VARCHAR(255) NOT NULL,
-  `content` TEXT NOT NULL,
-  `status` ENUM('draft','published') DEFAULT 'draft',
-  `author_id` INT NOT NULL,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `views` INT DEFAULT 0,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `slug` (`slug`),
-  FOREIGN KEY (`author_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- ================================
+-- TABLE: users
+-- ================================
+DROP TABLE IF EXISTS users;
 
--- Тестові записи
-INSERT INTO `posts` (`title`, `slug`, `content`, `status`, `author_id`)
-VALUES
-('Перша публікація', 'persha-publikatsiya', '<p>Текст першої публікації</p>', 'published', 1),
-('Чернетка', 'chernetka', '<p>Це чернетка</p>', 'draft', 2);
+CREATE TABLE users (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(100) DEFAULT NULL,
+    is_admin TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
--- --------------------------------------------------------
--- Таблиця categories (розділи)
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `categories` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(255) NOT NULL,
-  `slug` VARCHAR(255) NOT NULL,
-  `description` TEXT DEFAULT NULL,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `slug` (`slug`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- тестовий адмін (пароль: admin123)
+INSERT INTO users (email, password, name, is_admin) VALUES
+(
+  'admin@example.com',
+  '$2y$10$9eK1Zq2k5eJ6Kzv8rJ0g5Oq1F8G7f8l7F0O0zU8e8vY9y9rQvQZkW',
+  'Admin',
+  1
+);
 
--- Тестові категорії
-INSERT INTO `categories` (`name`, `slug`, `description`)
-VALUES
-('Новини', 'novyny', 'Розділ з новинами'),
-('Статті', 'statty', 'Розділ зі статтями');
+-- ================================
+-- TABLE: posts
+-- ================================
+DROP TABLE IF EXISTS posts;
 
--- --------------------------------------------------------
--- Таблиця post_categories (зв'язок постів з категоріями)
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `post_categories` (
-  `post_id` INT NOT NULL,
-  `category_id` INT NOT NULL,
-  PRIMARY KEY (`post_id`, `category_id`),
-  FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE posts (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
--- Тестовий зв'язок
-INSERT INTO `post_categories` (`post_id`, `category_id`)
-VALUES
-(1, 1), -- Перша публікація -> Новини
-(1, 2); -- Перша публікація -> Статті
+INSERT INTO posts (title, content) VALUES
+(
+  'Перший тестовий пост',
+  'Це тестовий запис із бази даних. Якщо ти це бачиш — MVC працює коректно.'
+),
+(
+  'Другий пост',
+  'Другий запис для перевірки списку постів.'
+);
 
--- --------------------------------------------------------
--- Таблиця sitemap_logs (для SEO та автоматичного оновлення)
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sitemap_logs` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `last_generated` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `status` ENUM('success','error') DEFAULT 'success',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- ================================
+-- TABLE: migrations (на майбутнє)
+-- ================================
+DROP TABLE IF EXISTS migrations;
 
--- --------------------------------------------------------
--- Таблиця uploads (для завантажених файлів/зображень)
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `uploads` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `filename` VARCHAR(255) NOT NULL,
-  `original_name` VARCHAR(255) NOT NULL,
-  `mime_type` VARCHAR(100) NOT NULL,
-  `size` INT NOT NULL,
-  `uploaded_by` INT NOT NULL,
-  `uploaded_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`uploaded_by`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Тестові файли
-INSERT INTO `uploads` (`filename`, `original_name`, `mime_type`, `size`, `uploaded_by`)
-VALUES
-('image1.jpg', 'example1.jpg', 'image/jpeg', 102400, 1),
-('image2.png', 'example2.png', 'image/png', 204800, 2);
+CREATE TABLE migrations (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    migration VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
