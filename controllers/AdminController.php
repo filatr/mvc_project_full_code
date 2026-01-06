@@ -1,48 +1,73 @@
 <?php
-/**
- * Адмін-контролер для керування постами
- */
 
+require_once ROOT . '/core/Controller.php';
 require_once ROOT . '/core/Auth.php';
 require_once ROOT . '/models/Post.php';
 
-class AdminPostController
+class AdminPostController extends Controller
 {
-    private Post $postModel;
-
     public function __construct()
     {
-        // Захист адмінки
-        Auth::requireAdmin();
+        parent::__construct();
 
-        $this->postModel = new Post();
+        if (!Auth::isAdmin()) {
+            http_response_code(403);
+            die('Доступ заборонено');
+        }
     }
 
-    /**
-     * Список постів
-     */
     public function index(): void
     {
-        $posts = $this->postModel->getLatest(50);
+        $postModel = new Post();
+        $posts = $postModel->getAll();
 
-        View::render('admin/posts/index', [
-            'posts' => $posts
-        ]);
+        $this->view->set('posts', $posts);
+        $this->view->render('admin/posts/index');
     }
 
-    /**
-     * Редагування поста
-     */
-    public function edit(int $id): void
+    public function create(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // тут пізніше буде update
+            $postModel = new Post();
+
+            $postModel->create([
+                'title' => $_POST['title'],
+                'content' => $_POST['content'],
+            ]);
+
+            header('Location: /adminpost/index');
+            exit;
         }
 
-        $post = $this->postModel->getById($id);
+        $this->view->render('admin/posts/create');
+    }
 
-        View::render('admin/posts/edit', [
-            'post' => $post
-        ]);
+    public function edit($id): void
+    {
+        $postModel = new Post();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $postModel->update($id, [
+                'title' => $_POST['title'],
+                'content' => $_POST['content'],
+            ]);
+
+            header('Location: /adminpost/index');
+            exit;
+        }
+
+        $post = $postModel->getById($id);
+
+        $this->view->set('post', $post);
+        $this->view->render('admin/posts/edit');
+    }
+
+    public function delete($id): void
+    {
+        $postModel = new Post();
+        $postModel->delete($id);
+
+        header('Location: /adminpost/index');
+        exit;
     }
 }

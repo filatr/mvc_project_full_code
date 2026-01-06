@@ -11,6 +11,10 @@ class HomeController extends Controller
         $posts = $postModel->getLatest();
 
         $this->view->set('posts', $posts);
+
+        $this->view->set('meta_title', 'Головна сторінка');
+        $this->view->set('meta_description', 'Опис головної сторінки');
+
         $this->view->render('home/index');
     }
 }
