@@ -1,6 +1,6 @@
 <?php
 
-abstract class Controller
+class Controller
 {
     protected View $view;
 
@@ -9,4 +9,3 @@ abstract class Controller
         $this->view = new View();
     }
 }
- 

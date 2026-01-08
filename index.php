@@ -1,58 +1,49 @@
 <?php
+// ================================
+// index.php — Front Controller
+// ================================
+
+declare(strict_types=1);
+
+ini_set('display_errors', '1');
+error_reporting(E_ALL);
 
 define('ROOT', dirname(__FILE__));
 
-require_once ROOT . '/config/config.php';
-require_once ROOT . '/core/Database.php';
-require_once ROOT . '/core/Model.php';
-require_once ROOT . '/core/View.php';
-require_once ROOT . '/core/Controller.php';
-require_once ROOT . '/core/Auth.php';
+// ----------------
+// Autoload
+// ----------------
+spl_autoload_register(function ($class) {
+    $paths = [
+        ROOT . '/core/' . $class . '.php',
+        ROOT . '/controllers/' . $class . '.php',
+        ROOT . '/models/' . $class . '.php',
+    ];
 
-$router->get('/admin/themes', 'AdminThemeController@index');
-$router->get('/admin/themes/activate/{theme}', 'AdminThemeController@activate');
+    foreach ($paths as $file) {
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
 
-$router->get('/{slug}', 'PageController@show');
-
-$router->get('/admin/pages', 'AdminPageController@index');
-$router->get('/admin/pages/create', 'AdminPageController@create');
-$router->post('/admin/pages/create', 'AdminPageController@create');
-$router->get('/admin/pages/edit/{id}', 'AdminPageController@edit');
-$router->post('/admin/pages/edit/{id}', 'AdminPageController@edit');
-$router->get('/admin/pages/delete/{id}', 'AdminPageController@delete');
-
-$router->get('/admin/media', 'AdminMediaController@index');
-$router->get('/admin/media/upload', 'AdminMediaController@upload');
-$router->post('/admin/media/upload', 'AdminMediaController@upload');
-
-
-
-
-Auth::start();
-
-$uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-
-$parts = explode('/', $uri);
-
-$controllerName = $parts[0] ?: 'home';
-$actionName     = $parts[1] ?? 'index';
-$param          = $parts[2] ?? null;
+// ----------------
+// Router (simple)
+// ----------------
+$controllerName = $_GET['controller'] ?? 'home';
+$actionName     = $_GET['action'] ?? 'index';
 
 $controllerClass = ucfirst($controllerName) . 'Controller';
-$controllerFile  = ROOT . '/controllers/' . $controllerClass . '.php';
 
-if (!file_exists($controllerFile)) {
-    http_response_code(404);
+if (!class_exists($controllerClass)) {
     die('Controller not found');
 }
-
-require_once $controllerFile;
 
 $controller = new $controllerClass();
 
 if (!method_exists($controller, $actionName)) {
-    http_response_code(404);
     die('Action not found');
 }
 
-$controller->$actionName($param);
+$controller->$actionName();

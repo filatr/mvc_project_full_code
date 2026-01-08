@@ -1,20 +1,22 @@
 <?php
 
-require_once ROOT . '/core/Controller.php';
-require_once ROOT . '/models/Post.php';
-
-class HomeController extends Controller
+class View
 {
-    public function index(): void
+    protected array $data = [];
+
+    public function set(string $key, mixed $value): void
     {
-        $postModel = new Post();
-        $posts = $postModel->getLatest();
+        $this->data[$key] = $value;
+    }
 
-        $this->view->set('posts', $posts);
+    public function render(string $view, string $layout = 'main'): void
+    {
+        extract($this->data, EXTR_SKIP);
 
-        $this->view->set('meta_title', 'Головна сторінка');
-        $this->view->set('meta_description', 'Опис головної сторінки');
+        ob_start();
+        require ROOT . '/views/' . $view . '.php';
+        $content = ob_get_clean();
 
-        $this->view->render('home/index');
+        require ROOT . '/views/layouts/' . $layout . '.php';
     }
 }
