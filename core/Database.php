@@ -1,38 +1,29 @@
 <?php
+declare(strict_types=1);
 
 class Database
 {
-    private static ?Database $instance = null;
-    private PDO $connection;
+    private static ?PDO $pdo = null;
 
-    private function __construct()
+    public static function getInstance(): PDO
     {
-        $dsn = 'mysql:host=' . DB_HOST .
-               ';dbname=' . DB_NAME .
-               ';charset=' . DB_CHARSET;
+        if (self::$pdo === null) {
+            $config = require ROOT . '/config/config.php';
+            $db = $config['db'];
 
-        $this->connection = new PDO(
-            $dsn,
-            DB_USER,
-            DB_PASS,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]
-        );
-    }
+            $dsn = "mysql:host={$db['host']};dbname={$db['name']};charset={$db['charset']}";
 
-    public static function getInstance(): Database
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
+            self::$pdo = new PDO(
+                $dsn,
+                $db['user'],
+                $db['pass'],
+                [
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                ]
+            );
         }
 
-        return self::$instance;
-    }
-
-    public function getConnection(): PDO
-    {
-        return $this->connection;
+        return self::$pdo;
     }
 }

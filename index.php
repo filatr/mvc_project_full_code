@@ -31,14 +31,28 @@ spl_autoload_register(function ($class) {
 // ----------------
 // Router (simple)
 // ----------------
-$controllerName = $_GET['controller'] ?? 'home';
-$actionName     = $_GET['action'] ?? 'index';
+require_once ROOT . '/core/Request.php';
+require_once ROOT . '/core/Response.php';
+
+$request = new Request();
+
+$controllerName = $request->getController();
+$actionName     = $request->getAction();
 
 $controllerClass = ucfirst($controllerName) . 'Controller';
 
 if (!class_exists($controllerClass)) {
-    die('Controller not found');
+    Response::notFound('Controller not found');
 }
+
+$controller = new $controllerClass();
+
+if (!method_exists($controller, $actionName)) {
+    Response::notFound('Action not found');
+}
+
+$controller->$actionName();
+
 
 $controller = new $controllerClass();
 

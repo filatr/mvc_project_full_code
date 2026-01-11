@@ -4,6 +4,10 @@ require_once ROOT . '/core/Model.php';
 
 class Post extends Model
 {
+    /* =========================
+     * READ
+     * ========================= */
+
     public function getByCategory(int $categoryId): array
     {
         $stmt = $this->db->prepare(
@@ -15,11 +19,24 @@ class Post extends Model
         $stmt->execute(['cid' => $categoryId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-	
-	public function getAll(): array
+
+    public function getAll(): array
     {
         $stmt = $this->db->query(
             "SELECT * FROM posts ORDER BY created_at DESC"
+        );
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * ТІЛЬКИ опубліковані пости
+     */
+    public function getAllPublished(): array
+    {
+        $stmt = $this->db->query(
+            "SELECT * FROM posts
+             WHERE status = 'published'
+             ORDER BY created_at DESC"
         );
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -33,6 +50,10 @@ class Post extends Model
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /* =========================
+     * WRITE
+     * ========================= */
+
     public function create(array $data): void
     {
         $stmt = $this->db->prepare(
@@ -45,7 +66,9 @@ class Post extends Model
     public function update(int $id, array $data): void
     {
         $stmt = $this->db->prepare(
-            "UPDATE posts SET title = :title, content = :content WHERE id = :id"
+            "UPDATE posts
+             SET title = :title, content = :content
+             WHERE id = :id"
         );
         $data['id'] = $id;
         $stmt->execute($data);
