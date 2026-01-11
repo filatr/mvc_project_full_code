@@ -1,6 +1,12 @@
+<?php require ROOT . '/views/partials/flash.php'; ?>
+
 <h2>Адмінка — пости</h2>
 
-<p><a href="/adminposts/create">+ Додати пост</a> | <a href="/logout">Вийти</a></p>
+<form method="post" action="/adminposts/delete" style="display:inline;">
+    <input type="hidden" name="id" value="<?= $post['id'] ?>">
+    <input type="hidden" name="csrf_token" value="<?= Csrf::token(); ?>">
+    <button type="submit" onclick="return confirm('Видалити?')">🗑</button>
+</form>
 
 <table border="1" cellpadding="5">
     <tr>

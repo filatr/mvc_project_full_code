@@ -1,6 +1,8 @@
 <h2>Новий пост</h2>
 
 <form method="post">
+    <input type="hidden" name="csrf_token" value="<?= Csrf::token(); ?>">
+
     <p>
         <input type="text" name="title" placeholder="Заголовок" required>
     </p>
@@ -11,5 +13,6 @@
 
     <button type="submit">Зберегти</button>
 </form>
+
 
 <p><a href="/adminposts/index">← Назад</a></p>

@@ -23,15 +23,27 @@ class AdminpostsController
      */
     public function create(): void
     {
+		
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $postModel = new Post();
-            $postModel->create([
-                'title'   => $_POST['title'],
-                'content' => $_POST['content'],
-            ]);
 
-            header('Location: /adminposts/index');
-            exit;
+    if (!Csrf::check($_POST['csrf_token'] ?? null)) {
+        Flash::set('error', 'CSRF token invalid');
+        header('Location: /adminposts/create');
+        exit;
+    }
+
+    $postModel = new Post();
+    $postModel->create([
+        'title'   => $_POST['title'],
+        'content' => $_POST['content'],
+    ]);
+
+    Csrf::regenerate();
+    Flash::set('success', 'Пост створено');
+    header('Location: /adminposts/index');
+    exit;
+}
+exit;
         }
 
         require ROOT . '/views/admin/posts/create.php';
@@ -46,14 +58,24 @@ class AdminpostsController
         $postModel = new Post();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $postModel->update($id, [
-                'title'   => $_POST['title'],
-                'content' => $_POST['content'],
-            ]);
 
-            header('Location: /adminposts/index');
-            exit;
-        }
+    if (!Csrf::check($_POST['csrf_token'] ?? null)) {
+        Flash::set('error', 'CSRF token invalid');
+        header('Location: /adminposts/edit?id=' . $id);
+        exit;
+    }
+
+    $postModel->update($id, [
+        'title'   => $_POST['title'],
+        'content' => $_POST['content'],
+    ]);
+
+    Csrf::regenerate();
+    Flash::set('success', 'Пост оновлено');
+    header('Location: /adminposts/index');
+    exit;
+}
+
 
         $post = $postModel->getById($id);
 

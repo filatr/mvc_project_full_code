@@ -1,3 +1,5 @@
+<?php require ROOT . '/views/partials/flash.php'; ?>
+
 <!DOCTYPE html>
 <html lang="uk">
 <head>

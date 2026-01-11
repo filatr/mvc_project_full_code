@@ -1,6 +1,8 @@
 <h2>Редагування поста</h2>
 
 <form method="post">
+    <input type="hidden" name="csrf_token" value="<?= Csrf::token(); ?>">
+
     <p>
         <input type="text" name="title"
                value="<?= htmlspecialchars($post['title']) ?>" required>
