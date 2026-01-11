@@ -1,21 +1,28 @@
-<h1>Вхід</h1>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Вхід в адмінку</title>
+</head>
+<body>
 
-<?php if (!empty($error)): ?>
+<h2>Вхід</h2>
+
+<?php if (!empty($_SESSION['error'])): ?>
     <p style="color:red;">
-        <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?>
+        <?= $_SESSION['error']; unset($_SESSION['error']); ?>
     </p>
 <?php endif; ?>
 
-<form method="post">
-    <label>
-        Email:<br>
-        <input type="email" name="email" required>
-    </label><br><br>
+<form method="post" action="/login">
+    <label>Email</label><br>
+    <input type="email" name="email" required><br><br>
 
-    <label>
-        Пароль:<br>
-        <input type="password" name="password" required>
-    </label><br><br>
+    <label>Пароль</label><br>
+    <input type="password" name="password" required><br><br>
 
     <button type="submit">Увійти</button>
 </form>
+
+</body>
+</html>

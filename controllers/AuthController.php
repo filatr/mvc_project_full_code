@@ -1,36 +1,47 @@
 <?php
 
-require_once ROOT . '/core/Controller.php';
 require_once ROOT . '/models/User.php';
-require_once ROOT . '/core/Auth.php';
+require_once ROOT . '/helpers/Auth.php';
 
-class AuthController extends Controller
+class AuthController
 {
+    /**
+     * Форма логіну
+     */
     public function login(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email    = trim($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? '';
-
-            $userModel = new User();
-            $user = $userModel->findByEmail($email);
-
-            if ($user && password_verify($password, $user['password'])) {
-                Auth::login($user);
-                header('Location: /admin');
-                exit;
-            }
-
-            $this->view->set('error', 'Невірний email або пароль');
-        }
-
-        $this->view->render('auth/login');
+        require ROOT . '/views/auth/login.php';
     }
 
+    /**
+     * Обробка логіну
+     */
+    public function authenticate(): void
+    {
+        $email    = $_POST['email'] ?? '';
+        $password = $_POST['password'] ?? '';
+
+        $userModel = new User();
+        $user = $userModel->findByEmail($email);
+
+        if (!$user || !password_verify($password, $user['password'])) {
+            $_SESSION['error'] = 'Невірний email або пароль';
+            header('Location: /login');
+            exit;
+        }
+
+        Auth::login($user);
+        header('Location: /admin');
+        exit;
+    }
+
+    /**
+     * Вихід
+     */
     public function logout(): void
     {
         Auth::logout();
-        header('Location: /');
+        header('Location: /login');
         exit;
     }
 }
