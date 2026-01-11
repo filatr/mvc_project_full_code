@@ -14,13 +14,12 @@ USE mvc_project;
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    name VARCHAR(100) DEFAULT NULL,
-    is_admin TINYINT(1) NOT NULL DEFAULT 0,
+    role ENUM('admin') DEFAULT 'admin',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+);
 
 -- тестовий адмін (пароль: admin123)
 INSERT INTO users (email, password, name, is_admin) VALUES
