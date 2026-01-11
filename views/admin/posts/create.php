@@ -1,11 +1,15 @@
-<h1>Новий запис</h1>
+<h2>Новий пост</h2>
 
 <form method="post">
-    <label>Заголовок</label><br>
-    <input type="text" name="title" required><br><br>
+    <p>
+        <input type="text" name="title" placeholder="Заголовок" required>
+    </p>
 
-    <label>Текст</label><br>
-    <textarea name="content" rows="10" cols="50"></textarea><br><br>
+    <p>
+        <textarea name="content" rows="10" cols="50" required></textarea>
+    </p>
 
     <button type="submit">Зберегти</button>
 </form>
+
+<p><a href="/adminposts/index">← Назад</a></p>

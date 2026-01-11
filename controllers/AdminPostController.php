@@ -1,39 +1,81 @@
 <?php
 
-define('ROOT', dirname(__FILE__));
+class AdminpostsController
+{
+    public function __construct()
+    {
+        Auth::check();
+    }
 
-require_once ROOT . '/config/config.php';
-require_once ROOT . '/core/Database.php';
-require_once ROOT . '/core/Model.php';
-require_once ROOT . '/core/View.php';
-require_once ROOT . '/core/Controller.php';
-require_once ROOT . '/core/Auth.php';
+    /**
+     * Список постів
+     */
+    public function index(): void
+    {
+        $postModel = new Post();
+        $posts = $postModel->getAll();
 
-Auth::start();
+        require ROOT . '/views/admin/posts/index.php';
+    }
 
-$uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+    /**
+     * Створення поста
+     */
+    public function create(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $postModel = new Post();
+            $postModel->create([
+                'title'   => $_POST['title'],
+                'content' => $_POST['content'],
+            ]);
 
-$parts = explode('/', $uri);
+            header('Location: /adminposts/index');
+            exit;
+        }
 
-$controllerName = $parts[0] ?: 'home';
-$actionName     = $parts[1] ?? 'index';
-$param          = $parts[2] ?? null;
+        require ROOT . '/views/admin/posts/create.php';
+    }
 
-$controllerClass = ucfirst($controllerName) . 'Controller';
-$controllerFile  = ROOT . '/controllers/' . $controllerClass . '.php';
+    /**
+     * Редагування
+     */
+    public function edit(): void
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        $postModel = new Post();
 
-if (!file_exists($controllerFile)) {
-    http_response_code(404);
-    die('Controller not found');
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $postModel->update($id, [
+                'title'   => $_POST['title'],
+                'content' => $_POST['content'],
+            ]);
+
+            header('Location: /adminposts/index');
+            exit;
+        }
+
+        $post = $postModel->getById($id);
+
+        if (!$post) {
+            Response::notFound('Post not found');
+            return;
+        }
+
+        require ROOT . '/views/admin/posts/edit.php';
+    }
+
+    /**
+     * Видалення
+     */
+    public function delete(): void
+    {
+        $id = (int)($_GET['id'] ?? 0);
+
+        $postModel = new Post();
+        $postModel->delete($id);
+
+        header('Location: /adminposts/index');
+        exit;
+    }
 }
-
-require_once $controllerFile;
-
-$controller = new $controllerClass();
-
-if (!method_exists($controller, $actionName)) {
-    http_response_code(404);
-    die('Action not found');
-}
-
-$controller->$actionName($param);

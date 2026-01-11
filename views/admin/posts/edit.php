@@ -1,14 +1,16 @@
-<h1>Редагування запису</h1>
+<h2>Редагування поста</h2>
 
 <form method="post">
-    <label>Заголовок</label><br>
-    <input type="text" name="title"
-           value="<?php echo htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8'); ?>"><br><br>
+    <p>
+        <input type="text" name="title"
+               value="<?= htmlspecialchars($post['title']) ?>" required>
+    </p>
 
-    <label>Текст</label><br>
-    <textarea name="content" rows="10" cols="50"><?php
-        echo htmlspecialchars($post['content'], ENT_QUOTES, 'UTF-8');
-    ?></textarea><br><br>
+    <p>
+        <textarea name="content" rows="10" cols="50" required><?= htmlspecialchars($post['content']) ?></textarea>
+    </p>
 
     <button type="submit">Оновити</button>
 </form>
+
+<p><a href="/adminposts/index">← Назад</a></p>
