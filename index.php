@@ -8,7 +8,14 @@ declare(strict_types=1);
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
-define('ROOT', dirname(__FILE__));
+define('ROOT', __DIR__);
+
+// ----------------
+// Session
+// ----------------
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // ----------------
 // Autoload
@@ -18,6 +25,7 @@ spl_autoload_register(function ($class) {
         ROOT . '/core/' . $class . '.php',
         ROOT . '/controllers/' . $class . '.php',
         ROOT . '/models/' . $class . '.php',
+        ROOT . '/helpers/' . $class . '.php',
     ];
 
     foreach ($paths as $file) {
@@ -29,11 +37,14 @@ spl_autoload_register(function ($class) {
 });
 
 // ----------------
-// Router (simple)
+// Core
 // ----------------
 require_once ROOT . '/core/Request.php';
 require_once ROOT . '/core/Response.php';
 
+// ----------------
+// Routing
+// ----------------
 $request = new Request();
 
 $controllerName = $request->getController();
@@ -43,21 +54,14 @@ $controllerClass = ucfirst($controllerName) . 'Controller';
 
 if (!class_exists($controllerClass)) {
     Response::notFound('Controller not found');
+    exit;
 }
 
 $controller = new $controllerClass();
 
 if (!method_exists($controller, $actionName)) {
     Response::notFound('Action not found');
-}
-
-$controller->$actionName();
-
-
-$controller = new $controllerClass();
-
-if (!method_exists($controller, $actionName)) {
-    die('Action not found');
+    exit;
 }
 
 $controller->$actionName();
