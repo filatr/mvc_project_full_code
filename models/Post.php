@@ -1,84 +1,88 @@
 <?php
 
-require_once ROOT . '/core/Model.php';
-
-class Post extends Model
+class Post
 {
-    /* =========================
-     * READ
-     * ========================= */
+    private PDO $db;
 
-    public function getByCategory(int $categoryId): array
+    public function __construct()
     {
-        $stmt = $this->db->prepare(
-            "SELECT p.* FROM posts p
-             JOIN post_category pc ON pc.post_id = p.id
-             WHERE pc.category_id = :cid
-             ORDER BY p.created_at DESC"
-        );
-        $stmt->execute(['cid' => $categoryId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->db = Database::getInstance();
     }
 
+    /**
+     * Отримати всі пости (для адмінки)
+     */
     public function getAll(): array
     {
         $stmt = $this->db->query(
-            "SELECT * FROM posts ORDER BY created_at DESC"
+            'SELECT id, title, created_at 
+             FROM posts 
+             ORDER BY created_at DESC'
         );
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * ТІЛЬКИ опубліковані пости
+     * Отримати пост по ID
      */
-    public function getAllPublished(): array
-    {
-        $stmt = $this->db->query(
-            "SELECT * FROM posts
-             WHERE status = 'published'
-             ORDER BY created_at DESC"
-        );
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getById(int $id): array|false
+    public function getById(int $id): ?array
     {
         $stmt = $this->db->prepare(
-            "SELECT * FROM posts WHERE id = :id"
+            'SELECT * FROM posts WHERE id = :id'
         );
+
         $stmt->execute(['id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $post = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $post ?: null;
     }
 
-    /* =========================
-     * WRITE
-     * ========================= */
-
-    public function create(array $data): void
+    /**
+     * Створити пост
+     */
+    public function create(array $data): bool
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO posts (title, content, created_at)
-             VALUES (:title, :content, NOW())"
+            'INSERT INTO posts (title, content, created_at)
+             VALUES (:title, :content, NOW())'
         );
-        $stmt->execute($data);
+
+        return $stmt->execute([
+            'title'   => $data['title'],
+            'content' => $data['content'],
+        ]);
     }
 
-    public function update(int $id, array $data): void
+    /**
+     * Оновити пост
+     */
+    public function update(int $id, array $data): bool
     {
         $stmt = $this->db->prepare(
-            "UPDATE posts
-             SET title = :title, content = :content
-             WHERE id = :id"
+            'UPDATE posts
+             SET title = :title,
+                 content = :content
+             WHERE id = :id'
         );
-        $data['id'] = $id;
-        $stmt->execute($data);
+
+        return $stmt->execute([
+            'id'      => $id,
+            'title'   => $data['title'],
+            'content' => $data['content'],
+        ]);
     }
 
-    public function delete(int $id): void
+    /**
+     * Видалити пост
+     */
+    public function delete(int $id): bool
     {
         $stmt = $this->db->prepare(
-            "DELETE FROM posts WHERE id = :id"
+            'DELETE FROM posts WHERE id = :id'
         );
-        $stmt->execute(['id' => $id]);
+
+        return $stmt->execute(['id' => $id]);
     }
 }

@@ -8,19 +8,12 @@ declare(strict_types=1);
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
-define('ROOT', __DIR__);
-
-// ----------------
-// Session
-// ----------------
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+define('ROOT', dirname(__FILE__));
 
 // ----------------
 // Autoload
 // ----------------
-spl_autoload_register(function ($class) {
+spl_autoload_register(function (string $class) {
     $paths = [
         ROOT . '/core/' . $class . '.php',
         ROOT . '/controllers/' . $class . '.php',
@@ -54,14 +47,15 @@ $controllerClass = ucfirst($controllerName) . 'Controller';
 
 if (!class_exists($controllerClass)) {
     Response::notFound('Controller not found');
-    exit;
 }
 
 $controller = new $controllerClass();
 
 if (!method_exists($controller, $actionName)) {
     Response::notFound('Action not found');
-    exit;
 }
 
+// ----------------
+// Run controller action
+// ----------------
 $controller->$actionName();
