@@ -22,32 +22,45 @@ class AdminpostsController
      * Створення поста
      */
     public function create(): void
-    {
-		
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    if (!Csrf::check($_POST['csrf_token'] ?? null)) {
-        Flash::set('error', 'CSRF token invalid');
-        header('Location: /adminposts/create');
+        // CSRF (якщо клас вже існує)
+        if (!Csrf::check($_POST['csrf_token'] ?? '')) {
+            die('CSRF token mismatch');
+        }
+
+        $title   = trim($_POST['title'] ?? '');
+        $content = trim($_POST['content'] ?? '');
+
+        if ($title === '' || $content === '') {
+            $_SESSION['flash'][] = [
+                'type' => 'error',
+                'text' => 'Заповни всі поля'
+            ];
+            header('Location: /adminposts/create');
+            exit;
+        }
+
+        $postModel = new Post();
+        $postModel->create([
+            'title'   => $title,
+            'content' => $content,
+        ]);
+
+        $_SESSION['flash'][] = [
+            'type' => 'success',
+            'text' => 'Пост створено'
+        ];
+
+        header('Location: /adminposts');
         exit;
     }
 
-    $postModel = new Post();
-    $postModel->create([
-        'title'   => $_POST['title'],
-        'content' => $_POST['content'],
-    ]);
-
-    Csrf::regenerate();
-    Flash::set('success', 'Пост створено');
-    header('Location: /adminposts/index');
-    exit;
+    // ⬅️ ОСЬ ТУТ ГОЛОВНА ЗМІНА
+    require ROOT . '/views/admin/posts/create.php';
 }
-exit;
-        }
 
-        require ROOT . '/views/admin/posts/create.php';
-    }
 
     /**
      * Редагування
